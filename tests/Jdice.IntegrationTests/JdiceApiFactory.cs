@@ -86,6 +86,16 @@ public sealed class JdiceApiFactory : WebApplicationFactory<Program>, IAsyncLife
         await context.Users.ExecuteDeleteAsync();
     }
 
+    public async Task ResetRecipientsAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<JdiceDbContext>();
+
+        // As participações saem em cascata pelas chaves estrangeiras.
+        await context.RecipientLists.ExecuteDeleteAsync();
+        await context.Recipients.ExecuteDeleteAsync();
+    }
+
     public async Task ResetTemplatesAsync()
     {
         using var scope = Services.CreateScope();

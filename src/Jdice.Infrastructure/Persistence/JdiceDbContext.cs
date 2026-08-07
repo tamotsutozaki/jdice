@@ -1,3 +1,4 @@
+using Jdice.Domain.Recipients;
 using Jdice.Domain.Templates;
 using Jdice.Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,10 @@ public sealed class JdiceDbContext(DbContextOptions<JdiceDbContext> options) : D
     public DbSet<User> Users => Set<User>();
 
     public DbSet<Template> Templates => Set<Template>();
+
+    public DbSet<Recipient> Recipients => Set<Recipient>();
+
+    public DbSet<RecipientList> RecipientLists => Set<RecipientList>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

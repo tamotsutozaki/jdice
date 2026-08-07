@@ -1,3 +1,4 @@
+using Jdice.Application.Recipients;
 using Jdice.Application.Templates;
 using Jdice.Application.Users;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,8 @@ public static class DependencyInjection
         services.AddScoped<AuthenticationService>();
         services.AddScoped<UserService>();
         services.AddScoped<TemplateService>();
+        services.AddScoped<RecipientService>();
+        services.AddScoped<RecipientListService>();
 
         return services;
     }
