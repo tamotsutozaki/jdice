@@ -1,0 +1,57 @@
+.status {
+  max-width: 32rem;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+  font-family: system-ui, sans-serif;
+}
+
+header {
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 0.25rem 0 0;
+    color: #6b7280;
+  }
+}
+
+.checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 2rem 0;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+
+  .name {
+    font-weight: 500;
+  }
+
+  .state {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  &.healthy .state {
+    color: #047857;
+  }
+
+  &.unhealthy .state {
+    color: #b91c1c;
+  }
+}
+
+footer {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}

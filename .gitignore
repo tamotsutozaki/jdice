@@ -1,0 +1,35 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+artifacts/
+TestResults/
+*.trx
+coverage/
+*.coverage
+*.coveragexml
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-error.log*
+
+# Configuração local e segredos
+appsettings.Local.json
+appsettings.*.Local.json
+.env
+.env.local
+*.pfx
+
+# Ferramentas locais
+.claude/
+
+# IDE
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

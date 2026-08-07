@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domain não referencia nenhum outro projeto nem pacote de infraestrutura.
+       Se algum dia precisar de EF Core aqui, a camada está errada. -->
+
+</Project>

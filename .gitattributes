@@ -1,0 +1,10 @@
+# Normaliza para LF no repositório. Sem isso, arquivos criados no Windows
+# chegam com CRLF nas imagens Linux e quebram scripts e entrypoints.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

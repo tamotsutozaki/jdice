@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Jdice.Api/Jdice.Api.csproj" />
+    <Project Path="src/Jdice.Application/Jdice.Application.csproj" />
+    <Project Path="src/Jdice.Domain/Jdice.Domain.csproj" />
+    <Project Path="src/Jdice.Infrastructure/Jdice.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Jdice.IntegrationTests/Jdice.IntegrationTests.csproj" />
+    <Project Path="tests/Jdice.UnitTests/Jdice.UnitTests.csproj" />
+  </Folder>
+</Solution>

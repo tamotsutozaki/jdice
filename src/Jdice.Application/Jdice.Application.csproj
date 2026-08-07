@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jdice.Domain\Jdice.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,20 @@
+<main class="status">
+  <header>
+    <h1>JDice</h1>
+    <p>Gerenciador de disparo de e-mails corporativos</p>
+  </header>
+
+  <section class="checks">
+    <div class="check" [class]="live()">
+      <span class="name">API</span>
+      <span class="state">{{ label(live()) }}</span>
+    </div>
+
+    <div class="check" [class]="ready()">
+      <span class="name">Banco de dados</span>
+      <span class="state">{{ label(ready()) }}</span>
+    </div>
+  </section>
+
+  <footer>Fase 0 — esqueleto. O login entra na Fase 1.</footer>
+</main>
