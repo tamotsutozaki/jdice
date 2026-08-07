@@ -68,6 +68,28 @@ describe('Login', () => {
     expect(navigateByUrl).toHaveBeenCalledWith('/');
   });
 
+  it('explica o bloqueio por excesso de tentativas', async () => {
+    const fixture = preencher('pedro@empresa.com', 'senha-bem-comprida-123');
+
+    (fixture.nativeElement as HTMLElement)
+      .querySelector('form')
+      ?.dispatchEvent(new Event('submit'));
+
+    httpMock
+      .expectOne('/api/auth/login')
+      .flush(null, { status: 429, statusText: 'Too Many Requests' });
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    // Sem dizer que é limite de tentativas, a pessoa insiste achando que
+    // errou a senha — e cada insistência renova o bloqueio.
+    expect(texto).toContain('Muitas tentativas seguidas');
+    expect(texto).not.toContain('E-mail ou senha incorretos');
+  });
+
   it('mostra mensagem genérica quando as credenciais são recusadas', async () => {
     const fixture = preencher('pedro@empresa.com', 'senha-errada-123456');
 

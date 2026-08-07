@@ -143,4 +143,57 @@ public class DesativacaoDeContaTests
         Assert.True(user.IsActive);
         Assert.Null(user.DeactivatedAt);
     }
+
+    [Fact]
+    public async Task Reativar_limpa_a_data_de_desativacao()
+    {
+        var comum = Cadastrar("comum@empresa.com", UserRole.User, ativo: false);
+
+        await _userService.ReactivateAsync(comum.Id);
+
+        Assert.True(comum.IsActive);
+        Assert.Null(comum.DeactivatedAt);
+    }
+
+    [Fact]
+    public async Task Reativar_conta_ja_ativa_nao_e_erro()
+    {
+        var comum = Cadastrar("comum@empresa.com", UserRole.User);
+
+        await _userService.ReactivateAsync(comum.Id);
+
+        Assert.True(comum.IsActive);
+    }
+
+    [Fact]
+    public async Task Reativar_conta_inexistente_e_recusado()
+    {
+        await Assert.ThrowsAsync<UserNotFoundException>(
+            () => _userService.ReactivateAsync(Guid.CreateVersion7()));
+    }
+
+    [Fact]
+    public async Task Conta_reativada_volta_a_entrar()
+    {
+        var hasher = new BcryptPasswordHasher();
+        var users = new FakeUserRepository();
+        var user = User.Create("comum@empresa.com", hasher.Hash(Senha), UserRole.User, Agora);
+        user.Deactivate(Agora);
+        users.Seed(user);
+
+        var userService = new UserService(users, hasher, new FakeTimeProvider(Agora));
+        await userService.ReactivateAsync(user.Id);
+
+        var authentication = new AuthenticationService(
+            users,
+            hasher,
+            new JwtTokenService(
+                Microsoft.Extensions.Options.Options.Create(new JwtOptions
+                {
+                    SigningKey = "chave-de-teste-com-mais-de-32-bytes-garantidos"
+                }),
+                new FakeTimeProvider(Agora)));
+
+        Assert.NotNull(await authentication.LoginAsync("comum@empresa.com", Senha));
+    }
 }

@@ -45,4 +45,8 @@ export class UsersService {
   desativar(id: string): Observable<void> {
     return this.http.delete<void>(`/api/auth/users/${id}`);
   }
+
+  reativar(id: string): Observable<void> {
+    return this.http.post<void>(`/api/auth/users/${id}/reactivate`, {});
+  }
 }

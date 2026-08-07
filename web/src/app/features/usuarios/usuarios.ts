@@ -20,8 +20,8 @@ export class Usuarios {
   protected readonly erro = signal('');
   protected readonly aviso = signal('');
 
-  /** Id em desativação, para desabilitar só a linha correspondente. */
-  protected readonly desativando = signal<string | null>(null);
+  /** Id com operação em curso, para desabilitar só a linha correspondente. */
+  protected readonly emAndamento = signal<string | null>(null);
 
   /** Id aguardando confirmação: desativar conta não deve acontecer num clique só. */
   protected readonly confirmando = signal<string | null>(null);
@@ -63,19 +63,39 @@ export class Usuarios {
   }
 
   protected desativar(usuario: UsuarioDaLista): void {
-    this.desativando.set(usuario.id);
+    this.emAndamento.set(usuario.id);
     this.confirmando.set(null);
     this.erro.set('');
     this.aviso.set('');
 
     this.users.desativar(usuario.id).subscribe({
       next: () => {
-        this.desativando.set(null);
+        this.emAndamento.set(null);
         this.aviso.set(`${usuario.email} não pode mais entrar.`);
         this.carregar();
       },
       error: (erro: HttpErrorResponse) => {
-        this.desativando.set(null);
+        this.emAndamento.set(null);
+        this.erro.set(this.mensagemDe(erro));
+      },
+    });
+  }
+
+  protected reativar(usuario: UsuarioDaLista): void {
+    this.emAndamento.set(usuario.id);
+    this.erro.set('');
+    this.aviso.set('');
+
+    // Reativar não pede confirmação: devolver acesso é reversível com um
+    // clique, ao contrário de tirá-lo.
+    this.users.reativar(usuario.id).subscribe({
+      next: () => {
+        this.emAndamento.set(null);
+        this.aviso.set(`${usuario.email} voltou a ter acesso.`);
+        this.carregar();
+      },
+      error: (erro: HttpErrorResponse) => {
+        this.emAndamento.set(null);
         this.erro.set(this.mensagemDe(erro));
       },
     });

@@ -60,7 +60,15 @@
             </td>
             <td class="data">{{ formatarData(usuario.criadoEm) }}</td>
             <td class="acao">
-              @if (usuario.ativo && !ehVoce(usuario)) {
+              @if (!usuario.ativo) {
+                <button
+                  type="button"
+                  (click)="reativar(usuario)"
+                  [disabled]="emAndamento() === usuario.id"
+                >
+                  {{ emAndamento() === usuario.id ? 'Reativando...' : 'Reativar' }}
+                </button>
+              } @else if (!ehVoce(usuario)) {
                 @if (confirmando() === usuario.id) {
                   <span class="confirmar">
                     <button type="button" class="perigo" (click)="desativar(usuario)">
@@ -72,9 +80,9 @@
                   <button
                     type="button"
                     (click)="pedirConfirmacao(usuario.id)"
-                    [disabled]="desativando() === usuario.id"
+                    [disabled]="emAndamento() === usuario.id"
                   >
-                    {{ desativando() === usuario.id ? 'Desativando...' : 'Desativar' }}
+                    {{ emAndamento() === usuario.id ? 'Desativando...' : 'Desativar' }}
                   </button>
                 }
               }

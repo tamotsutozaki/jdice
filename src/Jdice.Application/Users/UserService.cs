@@ -89,4 +89,26 @@ public sealed class UserService(
 
         await users.SaveChangesAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// Devolve o acesso a uma conta desativada. Não tem as travas da
+    /// desativação: reativar alguém nunca deixa o sistema sem administrador.
+    /// </summary>
+    /// <exception cref="UserNotFoundException">A conta não existe.</exception>
+    public async Task ReactivateAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await users.FindByIdAsync(userId, cancellationToken)
+            ?? throw new UserNotFoundException(userId);
+
+        // Já ativa: nada a fazer, e nada a reclamar — mesma razão da
+        // desativação repetida não ser erro.
+        if (user.IsActive)
+        {
+            return;
+        }
+
+        user.Reactivate();
+
+        await users.SaveChangesAsync(cancellationToken);
+    }
 }

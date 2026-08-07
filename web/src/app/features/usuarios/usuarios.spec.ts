@@ -105,10 +105,33 @@ describe('Usuarios', () => {
     expect(minhaLinha.querySelector('button')).toBeNull();
   });
 
-  it('não oferece desativar para conta já desativada', () => {
+  it('oferece reativar, não desativar, para conta já desativada', () => {
     const fixture = montar();
 
-    expect(linhas(fixture)[2].querySelector('button')).toBeNull();
+    expect(linhas(fixture)[2].querySelector('button')?.textContent).toContain('Reativar');
+  });
+
+  it('reativa sem pedir confirmação', async () => {
+    const fixture = montar();
+
+    // Devolver acesso é reversível com um clique, ao contrário de tirá-lo:
+    // não faz sentido exigir confirmação.
+    linhas(fixture)[2].querySelector('button')?.click();
+
+    httpMock
+      .expectOne({ method: 'POST', url: '/api/auth/users/id-do-joao/reactivate' })
+      .flush(null);
+
+    httpMock
+      .expectOne('/api/auth/users')
+      .flush(
+        lista.map((u) => (u.id === 'id-do-joao' ? { ...u, ativo: true, desativadoEm: null } : u)),
+      );
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(texto(fixture)).toContain('joao@empresa.com voltou a ter acesso.');
   });
 
   it('pede confirmação antes de desativar', () => {

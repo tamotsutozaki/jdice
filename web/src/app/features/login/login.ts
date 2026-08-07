@@ -46,15 +46,23 @@ export class Login {
       },
       error: (erro: { status?: number }) => {
         this.enviando.set(false);
-
-        // Mensagem única para e-mail inexistente e senha errada: distinguir os
-        // dois casos revelaria quem tem conta no sistema.
-        this.erro.set(
-          erro.status === 401
-            ? 'E-mail ou senha incorretos.'
-            : 'Não foi possível entrar. Tente novamente em instantes.',
-        );
+        this.erro.set(this.mensagemDe(erro.status));
       },
     });
+  }
+
+  private mensagemDe(status?: number): string {
+    switch (status) {
+      case 401:
+        // Mensagem única para e-mail inexistente e senha errada: distinguir os
+        // dois casos revelaria quem tem conta no sistema.
+        return 'E-mail ou senha incorretos.';
+      case 429:
+        // Sem explicar que é limite de tentativas, a pessoa fica insistindo e
+        // achando que a senha está errada — e cada insistência renova o bloqueio.
+        return 'Muitas tentativas seguidas. Aguarde um minuto antes de tentar de novo.';
+      default:
+        return 'Não foi possível entrar. Tente novamente em instantes.';
+    }
   }
 }

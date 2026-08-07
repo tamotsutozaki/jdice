@@ -26,6 +26,8 @@ public static class AuthEndpoints
         group.MapGet("/users", ListUsersAsync).RequireAuthorization(AuthorizationPolicies.AdminOnly);
         group.MapDelete("/users/{id:guid}", DeactivateUserAsync)
             .RequireAuthorization(AuthorizationPolicies.AdminOnly);
+        group.MapPost("/users/{id:guid}/reactivate", ReactivateUserAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
 
         return builder;
     }
@@ -169,6 +171,24 @@ public static class AuthEndpoints
         {
             return TypedResults.Conflict(Problema(
                 StatusCodes.Status409Conflict, "Último administrador", exception.Message));
+        }
+    }
+
+    private static async Task<Results<NoContent, NotFound<ProblemDetails>>> ReactivateUserAsync(
+        Guid id,
+        UserService userService,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await userService.ReactivateAsync(id, cancellationToken);
+
+            return TypedResults.NoContent();
+        }
+        catch (UserNotFoundException exception)
+        {
+            return TypedResults.NotFound(Problema(
+                StatusCodes.Status404NotFound, "Conta não encontrada", exception.Message));
         }
     }
 

@@ -157,6 +157,72 @@ public class GestaoDeContasTests(JdiceApiFactory factory) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Reativar_devolve_o_acesso_e_a_pessoa_consegue_entrar()
+    {
+        await factory.CriarUsuarioAsync("admin@empresa.com", Senha, UserRole.Admin);
+        var alvo = await factory.CriarUsuarioAsync("comum@empresa.com", Senha, UserRole.User);
+
+        var admin = await LogarAsync("admin@empresa.com");
+        await admin.DeleteAsync($"/api/auth/users/{alvo.Id}");
+
+        var reativacao = await admin.PostAsync($"/api/auth/users/{alvo.Id}/reactivate", null);
+        Assert.Equal(HttpStatusCode.NoContent, reativacao.StatusCode);
+
+        // Uma conta desativada por engano precisa voltar sem passar por SQL.
+        var login = await factory.CreateClient().PostAsJsonAsync(
+            "/api/auth/login",
+            new { email = "comum@empresa.com", senha = Senha });
+
+        Assert.Equal(HttpStatusCode.NoContent, login.StatusCode);
+    }
+
+    [Fact]
+    public async Task Conta_reativada_volta_a_aparecer_como_ativa()
+    {
+        await factory.CriarUsuarioAsync("admin@empresa.com", Senha, UserRole.Admin);
+        var alvo = await factory.CriarUsuarioAsync("comum@empresa.com", Senha, UserRole.User);
+
+        var admin = await LogarAsync("admin@empresa.com");
+        await admin.DeleteAsync($"/api/auth/users/{alvo.Id}");
+        await admin.PostAsync($"/api/auth/users/{alvo.Id}/reactivate", null);
+
+        var contas = await admin.GetFromJsonAsync<List<ContaListada>>("/api/auth/users");
+        var reativada = Assert.Single(contas!, conta => conta.Email == "comum@empresa.com");
+
+        Assert.True(reativada.Ativo);
+        Assert.Null(reativada.DesativadoEm);
+    }
+
+    [Fact]
+    public async Task Usuario_comum_nao_reativa_ninguem()
+    {
+        await factory.CriarUsuarioAsync("admin@empresa.com", Senha, UserRole.Admin);
+        var alvo = await factory.CriarUsuarioAsync("alvo@empresa.com", Senha, UserRole.User);
+        await factory.CriarUsuarioAsync("comum@empresa.com", Senha, UserRole.User);
+
+        var admin = await LogarAsync("admin@empresa.com");
+        await admin.DeleteAsync($"/api/auth/users/{alvo.Id}");
+
+        var comum = await LogarAsync("comum@empresa.com");
+        var tentativa = await comum.PostAsync($"/api/auth/users/{alvo.Id}/reactivate", null);
+
+        Assert.Equal(HttpStatusCode.Forbidden, tentativa.StatusCode);
+    }
+
+    [Fact]
+    public async Task Reativar_conta_inexistente_devolve_404()
+    {
+        await factory.CriarUsuarioAsync("admin@empresa.com", Senha, UserRole.Admin);
+
+        var admin = await LogarAsync("admin@empresa.com");
+        var resposta = await admin.PostAsync(
+            $"/api/auth/users/{Guid.CreateVersion7()}/reactivate",
+            null);
+
+        Assert.Equal(HttpStatusCode.NotFound, resposta.StatusCode);
+    }
+
+    [Fact]
     public async Task Desativar_conta_inexistente_devolve_404()
     {
         await factory.CriarUsuarioAsync("admin@empresa.com", Senha, UserRole.Admin);
