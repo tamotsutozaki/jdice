@@ -14,14 +14,15 @@
     }
   </header>
 
-  @if (isAdmin()) {
-    <!-- Só para administradores: o endpoint recusa os demais, e oferecer o
-         link a quem seria barrado pelo guard é um beco sem saída. -->
-    <nav class="acoes">
+  <nav class="acoes">
+    <a routerLink="/modelos">Modelos de e-mail</a>
+
+    @if (isAdmin()) {
+      <!-- Só para administradores: o endpoint recusa os demais, e oferecer o
+           link a quem seria barrado pelo guard é um beco sem saída. -->
       <a routerLink="/usuarios">Gerenciar contas</a>
-      <a routerLink="/usuarios/novo">Cadastrar usuário</a>
-    </nav>
-  }
+    }
+  </nav>
 
   <section class="checks">
     <div class="check" [class]="live()">

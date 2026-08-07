@@ -1,0 +1,161 @@
+<main class="pagina">
+  @if (carregando()) {
+    <p class="vazio">Carregando...</p>
+  } @else if (modelo(); as m) {
+    <header>
+      <div>
+        <h1>
+          {{ m.nome }}
+          @if (m.arquivado) {
+            <span class="marca">arquivado</span>
+          }
+        </h1>
+        <p>
+          {{ m.versoes.length }} {{ m.versoes.length === 1 ? 'versão' : 'versões' }} · atualizado em
+          {{ formatarDataHora(m.atualizadoEm) }}
+        </p>
+      </div>
+      <a routerLink="/modelos">Voltar</a>
+    </header>
+
+    @if (erro()) {
+      <p class="aviso erro" role="alert">{{ erro() }}</p>
+    }
+
+    @if (aviso()) {
+      <p class="aviso sucesso" role="status">{{ aviso() }}</p>
+    }
+
+    <section class="bloco">
+      <div class="bloco-cabecalho">
+        <h2>Identificação</h2>
+        @if (!editandoDados()) {
+          <button type="button" (click)="editandoDados.set(true)">Editar</button>
+        }
+      </div>
+
+      @if (editandoDados()) {
+        <div class="dados">
+          <label>
+            <span>Nome</span>
+            <input type="text" [ngModel]="nome()" (ngModelChange)="nome.set($event)" />
+          </label>
+          <label>
+            <span>Categoria</span>
+            <input type="text" [ngModel]="categoria()" (ngModelChange)="categoria.set($event)" />
+          </label>
+          <label>
+            <span>Tags</span>
+            <input type="text" [ngModel]="tags()" (ngModelChange)="tags.set($event)" />
+          </label>
+        </div>
+        <div class="acoes">
+          <button
+            type="button"
+            class="primario"
+            (click)="salvarDados()"
+            [disabled]="salvandoDados()"
+          >
+            {{ salvandoDados() ? 'Salvando...' : 'Salvar' }}
+          </button>
+          <button type="button" (click)="editandoDados.set(false)">Cancelar</button>
+        </div>
+        <p class="nota">Alterar estes campos não cria versão: eles não vão dentro do e-mail.</p>
+      } @else {
+        <dl class="resumo">
+          <div>
+            <dt>Categoria</dt>
+            <dd>{{ m.categoria || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Tags</dt>
+            <dd>
+              @if (m.tags.length === 0) {
+                —
+              } @else {
+                @for (tag of m.tags; track tag) {
+                  <span class="tag">{{ tag }}</span>
+                }
+              }
+            </dd>
+          </div>
+        </dl>
+      }
+    </section>
+
+    <section class="bloco">
+      <div class="bloco-cabecalho">
+        <h2>Versões</h2>
+        @if (!criandoVersao() && !m.arquivado) {
+          <button type="button" class="primario" (click)="abrirNovaVersao()">Nova versão</button>
+        }
+      </div>
+
+      @if (criandoVersao()) {
+        <div class="nova-versao">
+          <p class="nota">
+            Começando a partir da versão {{ versaoAtual()?.numero }}. Ao salvar, ela continua
+            guardada exatamente como está — nada é sobrescrito.
+          </p>
+
+          <app-editor-conteudo
+            [htmlInicial]="htmlDaNovaVersao()"
+            (htmlMudou)="htmlDaNovaVersao.set($event)"
+            (validoMudou)="conteudoValido.set($event)"
+          />
+
+          <div class="acoes">
+            <button
+              type="button"
+              class="primario"
+              (click)="salvarNovaVersao()"
+              [disabled]="salvandoVersao() || !conteudoValido()"
+            >
+              {{ salvandoVersao() ? 'Salvando...' : 'Salvar nova versão' }}
+            </button>
+            <button type="button" (click)="cancelarNovaVersao()">Cancelar</button>
+          </div>
+        </div>
+      }
+
+      <ul class="versoes">
+        @for (versao of m.versoes; track versao.id) {
+          <li class="versao">
+            <button type="button" class="versao-cabecalho" (click)="alternarVersao(versao.numero)">
+              <span class="numero">v{{ versao.numero }}</span>
+              @if (versao.numero === versaoAtual()?.numero) {
+                <span class="atual">atual</span>
+              }
+              <span class="data">{{ formatarDataHora(versao.criadoEm) }}</span>
+              <span class="conta-variaveis">
+                {{ versao.variaveis.length }}
+                {{ versao.variaveis.length === 1 ? 'variável' : 'variáveis' }}
+              </span>
+              <span class="seta">{{ versaoAberta() === versao.numero ? '▾' : '▸' }}</span>
+            </button>
+
+            @if (versaoAberta() === versao.numero) {
+              <div class="versao-corpo">
+                @if (versao.variaveis.length > 0) {
+                  <div class="variaveis">
+                    @for (variavel of versao.variaveis; track variavel) {
+                      <code>{{ variavel }}</code>
+                    }
+                  </div>
+                }
+                <pre>{{ versao.html }}</pre>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+
+    <footer>
+      O conteúdo de uma versão nunca muda. É isso que torna possível responder, meses depois, o que
+      exatamente foi enviado num disparo.
+    </footer>
+  } @else {
+    <p class="vazio">Modelo não encontrado.</p>
+  }
+</main>

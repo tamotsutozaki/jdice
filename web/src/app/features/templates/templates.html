@@ -1,0 +1,130 @@
+<main class="pagina">
+  <header>
+    <div>
+      <h1>Modelos de e-mail</h1>
+      <p>
+        {{ modelos().length }}
+        {{ modelos().length === 1 ? 'modelo' : 'modelos' }}
+      </p>
+    </div>
+    <div class="header-acoes">
+      <a class="principal" routerLink="/modelos/novo">Novo modelo</a>
+      <a routerLink="/">Voltar</a>
+    </div>
+  </header>
+
+  <form class="filtros" (ngSubmit)="carregar()">
+    <input
+      type="search"
+      placeholder="Buscar por nome..."
+      [ngModel]="busca()"
+      (ngModelChange)="busca.set($event)"
+      name="busca"
+    />
+
+    <select [ngModel]="categoria()" (ngModelChange)="categoria.set($event)" name="categoria">
+      <option value="">Todas as categorias</option>
+      @for (item of categorias(); track item) {
+        <option [value]="item">{{ item }}</option>
+      }
+    </select>
+
+    <label class="arquivados">
+      <input
+        type="checkbox"
+        [ngModel]="incluirArquivados()"
+        (ngModelChange)="incluirArquivados.set($event)"
+        name="arquivados"
+      />
+      Mostrar arquivados
+    </label>
+
+    <button type="submit">Filtrar</button>
+  </form>
+
+  @if (erro()) {
+    <p class="aviso erro" role="alert">{{ erro() }}</p>
+  }
+
+  @if (aviso()) {
+    <p class="aviso sucesso" role="status">{{ aviso() }}</p>
+  }
+
+  @if (carregando()) {
+    <p class="vazio">Carregando...</p>
+  } @else if (modelos().length === 0) {
+    <p class="vazio">Nenhum modelo encontrado.</p>
+  } @else {
+    <ul class="lista">
+      @for (modelo of modelos(); track modelo.id) {
+        <li class="cartao" [class.arquivado]="modelo.arquivado">
+          <div class="cartao-corpo">
+            <div class="cartao-titulo">
+              <a [routerLink]="['/modelos', modelo.id]">{{ modelo.nome }}</a>
+              @if (modelo.arquivado) {
+                <span class="marca">arquivado</span>
+              }
+            </div>
+
+            <div class="cartao-meta">
+              @if (modelo.categoria) {
+                <span class="categoria">{{ modelo.categoria }}</span>
+              }
+              <span>
+                {{ modelo.totalDeVersoes }}
+                {{ modelo.totalDeVersoes === 1 ? 'versão' : 'versões' }}
+              </span>
+              @if (modelo.versaoAtual) {
+                <span>atual: v{{ modelo.versaoAtual }}</span>
+              }
+              <span>{{ formatarData(modelo.atualizadoEm) }}</span>
+            </div>
+
+            @if (modelo.variaveis.length > 0) {
+              <div class="variaveis">
+                @for (variavel of modelo.variaveis; track variavel) {
+                  <code>{{ variavel }}</code>
+                }
+              </div>
+            }
+
+            @if (modelo.tags.length > 0) {
+              <div class="tags">
+                @for (tag of modelo.tags; track tag) {
+                  <span class="tag">{{ tag }}</span>
+                }
+              </div>
+            }
+          </div>
+
+          @if (isAdmin()) {
+            <div class="cartao-acao">
+              @if (modelo.arquivado) {
+                <button
+                  type="button"
+                  (click)="desarquivar(modelo)"
+                  [disabled]="emAndamento() === modelo.id"
+                >
+                  Reativar
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  (click)="arquivar(modelo)"
+                  [disabled]="emAndamento() === modelo.id"
+                >
+                  Arquivar
+                </button>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <footer>
+    O conteúdo de um modelo nunca é alterado. Para mudar o texto, abra o modelo e crie uma nova
+    versão — as anteriores continuam guardadas para explicar o que foi disparado no passado.
+  </footer>
+</main>

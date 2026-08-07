@@ -25,6 +25,7 @@ namespace Jdice.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Jdice.Domain.Templates.Template", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("ArchivedAt")
@@ -65,6 +66,7 @@ namespace Jdice.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Jdice.Domain.Templates.TemplateVersion", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -98,6 +100,7 @@ namespace Jdice.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Jdice.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")

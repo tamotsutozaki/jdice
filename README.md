@@ -160,9 +160,52 @@ Cadastros simultâneos do mesmo e-mail resultam em uma conta e conflitos: a
 checagem prévia serve para responder rápido, mas quem garante a unicidade é o
 índice do banco, cuja violação é traduzida em `409`.
 
+## Modelos de e-mail
+
+| Rota | Acesso | O que faz |
+|---|---|---|
+| `GET /api/templates` | autenticado | lista, com busca e filtros |
+| `GET /api/templates/{id}` | autenticado | detalhe com todas as versões |
+| `POST /api/templates` | autenticado | cria o modelo e a versão 1 |
+| `POST /api/templates/{id}/versions` | autenticado | cria a próxima versão |
+| `PUT /api/templates/{id}` | autenticado | altera nome, categoria e tags |
+| `POST /api/templates/preview` | autenticado | renderiza sem gravar |
+| `DELETE /api/templates/{id}` | **Admin** | arquiva |
+
+**O conteúdo de uma versão nunca é alterado — nem por Admin.** Não existe rota
+para isso, e há teste que garante que continue não existindo. Mudar o texto é
+criar a próxima versão; as anteriores ficam guardadas. É isso que permite
+responder, meses depois, o que exatamente foi disparado.
+
+Nome, categoria e tags **são** editáveis, e de propósito: não vão dentro do
+e-mail, e congelá-los faria corrigir um erro de digitação numa tag gerar uma
+versão de HTML idêntica à anterior — poluindo justamente o histórico que a
+imutabilidade existe para proteger.
+
+No projeto original isso era só convenção: a tela de edição deixava o número da
+versão livre e o upload gravava com `REPLACE_EXISTING`, então editar mantendo o
+mesmo número sobrescrevia o arquivo e o histórico sumia sem aviso.
+
+### Variáveis
+
+O motor é o **Scriban**, com sintaxe `{{ variavel }}`. As variáveis são
+descobertas percorrendo a árvore sintática do template, não por expressão
+regular — a diferença aparece nos casos reais:
+
+```
+{{ if vip }}Bem-vindo, {{ nome }}!{{ end }}
+   → regex acha "nome" mas perde "vip", que é o que precisa ser preenchido
+
+{{ for item in produtos }}{{ item }}{{ end }}
+   → regex pediria "item", que só existe dentro da iteração
+```
+
+Conteúdo com erro de sintaxe é recusado ao salvar, já que a versão não poderá
+ser corrigida depois. No preview, o mesmo erro volta junto da resposta em vez de
+virar `400`: quem está escrevendo precisa ver o problema enquanto escreve.
+
 ## Estado
 
-**Fase 1 — autenticação.** Contas, login, perfis e seed do administrador.
-Templates entram na Fase 2, destinatários na Fase 3, envio na Fase 4,
-agendamento na Fase 5.
+**Fase 2 — modelos de e-mail.** Versionamento imutável, Scriban, preview.
+Destinatários entram na Fase 3, envio na Fase 4, agendamento na Fase 5.
 

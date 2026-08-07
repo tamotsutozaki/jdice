@@ -14,9 +14,11 @@ public sealed class JdiceDbContextFactory : IDesignTimeDbContextFactory<JdiceDbC
     {
         // Gerar migration não conecta no banco; a string só precisa ser válida
         // sintaticamente. Para aplicar de fato, defina JDICE_MIGRATIONS_CONNECTION.
+        // Porta 5433: a 5432 costuma estar ocupada por uma instalação nativa
+        // do Postgres, e cair nela dá erro de autenticação confuso.
         var connectionString =
             Environment.GetEnvironmentVariable("JDICE_MIGRATIONS_CONNECTION")
-            ?? "Host=localhost;Port=5432;Database=jdice;Username=jdice;Password=jdice";
+            ?? "Host=localhost;Port=5433;Database=jdice;Username=jdice;Password=jdice";
 
         var options = new DbContextOptionsBuilder<JdiceDbContext>()
             .UseNpgsql(connectionString)

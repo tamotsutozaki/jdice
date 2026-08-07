@@ -8,7 +8,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-jdice}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jdice}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # 5433 no host de propósito: 5432 costuma já estar ocupada por uma
+      # instalação nativa do Postgres, e o conflito é silencioso — a conexão
+      # cai no servidor errado em vez de falhar.
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:

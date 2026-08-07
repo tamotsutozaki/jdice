@@ -1,0 +1,50 @@
+<main class="pagina">
+  <header>
+    <div>
+      <h1>Novo modelo</h1>
+      <p>O conteúdo salvo vira a versão 1 e não poderá ser alterado depois.</p>
+    </div>
+    <a routerLink="/modelos">Voltar</a>
+  </header>
+
+  @if (erro()) {
+    <p class="aviso erro" role="alert">{{ erro() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="criar()">
+    <div class="dados">
+      <label>
+        <span>Nome</span>
+        <input type="text" formControlName="nome" placeholder="Boas-vindas" />
+        @if (form.controls.nome.touched && form.controls.nome.invalid) {
+          <small>Informe um nome de até 120 caracteres.</small>
+        }
+      </label>
+
+      <label>
+        <span>Categoria</span>
+        <input type="text" formControlName="categoria" placeholder="Onboarding" />
+      </label>
+
+      <label>
+        <span>Tags</span>
+        <input type="text" formControlName="tags" placeholder="novo, cliente" />
+        <small class="dica">Separe por vírgula.</small>
+      </label>
+    </div>
+
+    <app-editor-conteudo
+      (htmlMudou)="html.set($event)"
+      (validoMudou)="conteudoValido.set($event)"
+    />
+
+    <div class="rodape">
+      <p class="alerta">
+        Depois de salvo, este conteúdo fica congelado. Ajustes futuros criam uma nova versão.
+      </p>
+      <button type="submit" [disabled]="enviando() || !conteudoValido()">
+        {{ enviando() ? 'Salvando...' : 'Salvar modelo' }}
+      </button>
+    </div>
+  </form>
+</main>

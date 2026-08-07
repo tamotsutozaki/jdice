@@ -1,0 +1,76 @@
+<div class="editor">
+  <section class="coluna">
+    <label class="campo">
+      <span class="rotulo">Conteúdo HTML</span>
+      <textarea
+        rows="18"
+        spellcheck="false"
+        placeholder="<p>Olá {{ '{{' }} nome {{ '}}' }}, tudo bem?</p>"
+        [ngModel]="html()"
+        (ngModelChange)="aoDigitar($event)"
+      ></textarea>
+    </label>
+
+    @if (erros().length > 0) {
+      <div class="erros" role="alert">
+        <strong>O conteúdo tem erros:</strong>
+        <ul>
+          @for (erro of erros(); track erro) {
+            <li>{{ erro }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    <div class="variaveis">
+      <div class="variaveis-cabecalho">
+        <span class="rotulo">Variáveis encontradas</span>
+        @if (analisando()) {
+          <span class="analisando">verificando...</span>
+        }
+      </div>
+
+      @if (variaveis().length === 0) {
+        <p class="dica">
+          Nenhuma variável. Use {{ '{{' }} nome {{ '}}' }} no conteúdo para personalizar o e-mail.
+        </p>
+      } @else {
+        <p class="dica">Preencha valores de exemplo para ver como o e-mail vai ficar.</p>
+        @for (variavel of variaveis(); track variavel) {
+          <label class="variavel">
+            <code>{{ variavel }}</code>
+            <input
+              type="text"
+              [value]="valorDe(variavel)"
+              (input)="definirValor(variavel, $any($event.target).value)"
+              [placeholder]="'exemplo de ' + variavel"
+            />
+          </label>
+        }
+      }
+    </div>
+  </section>
+
+  <section class="coluna">
+    <span class="rotulo">Pré-visualização</span>
+
+    @if (previewHtml()) {
+      <!-- iframe isola o CSS do e-mail do CSS da aplicação e, sem
+           allow-scripts, nada do conteúdo é executado. -->
+      <iframe
+        class="preview"
+        title="Pré-visualização do e-mail"
+        sandbox=""
+        [srcdoc]="previewHtml()"
+      ></iframe>
+    } @else {
+      <div class="preview vazio">
+        {{
+          erros().length > 0
+            ? 'Corrija os erros para ver a pré-visualização.'
+            : 'Escreva o conteúdo para ver aqui.'
+        }}
+      </div>
+    }
+  </section>
+</div>
