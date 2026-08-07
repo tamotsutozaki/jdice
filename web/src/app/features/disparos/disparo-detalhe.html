@@ -1,0 +1,160 @@
+<div class="pagina">
+  @if (carregando()) {
+    <p class="vazio">Carregando...</p>
+  } @else if (disparo(); as d) {
+    <div class="page-head">
+      <div>
+        <h1>
+          {{ d.nome }}
+          <span class="situacao" [class]="d.situacao.toLowerCase()">
+            {{ rotuloDaSituacao(d.situacao) }}
+          </span>
+        </h1>
+        <p>
+          Assunto: {{ d.assunto }} · versão {{ d.versaoDoModelo }} do modelo ·
+          {{ formatarDataHora(d.agendadoPara) }} ({{ d.fusoHorario }})
+        </p>
+      </div>
+      <div class="head-acoes">
+        <button class="btn btn-sm" type="button" (click)="carregar()">Atualizar</button>
+        <a class="btn btn-sm" routerLink="/disparos">Voltar</a>
+      </div>
+    </div>
+
+    @if (erro()) {
+      <p class="alert alert-error" role="alert">{{ erro() }}</p>
+    }
+
+    @if (aviso()) {
+      <p class="alert alert-success" role="status">{{ aviso() }}</p>
+    }
+
+    <section class="card progresso-card">
+      <div class="numeros">
+        <div class="numero">
+          <span class="valor">{{ d.resumo.total }}</span>
+          <span class="rotulo">destinatários</span>
+        </div>
+        <div class="numero enviados">
+          <span class="valor">{{ d.resumo.enviados }}</span>
+          <span class="rotulo">entregues</span>
+        </div>
+        <div class="numero" [class.tem-erro]="d.resumo.falhados > 0">
+          <span class="valor">{{ d.resumo.falhados }}</span>
+          <span class="rotulo">falharam</span>
+        </div>
+        <div class="numero">
+          <span class="valor">{{ d.resumo.pulados }}</span>
+          <span class="rotulo">não enviados</span>
+        </div>
+        <div class="numero">
+          <span class="valor">{{ d.resumo.pendentes }}</span>
+          <span class="rotulo">na fila</span>
+        </div>
+      </div>
+
+      @if (d.situacao !== 'Cancelled') {
+        <div class="barra">
+          <div class="preenchida" [style.width.%]="progresso()"></div>
+        </div>
+      }
+
+      @if (podeMexer()) {
+        <div class="acoes-agendamento">
+          @if (confirmandoCancelamento()) {
+            <span class="pergunta">Cancelar este disparo? Nenhum e-mail será enviado.</span>
+            <button
+              class="btn btn-sm btn-danger"
+              type="button"
+              (click)="cancelar()"
+              [disabled]="emAndamento()"
+            >
+              Confirmar
+            </button>
+            <button class="btn btn-sm" type="button" (click)="confirmandoCancelamento.set(false)">
+              Voltar
+            </button>
+          } @else if (remarcando()) {
+            <input type="date" [ngModel]="data()" (ngModelChange)="data.set($event)" />
+            <input type="time" [ngModel]="hora()" (ngModelChange)="hora.set($event)" />
+            <button
+              class="btn btn-sm btn-primary"
+              type="button"
+              (click)="remarcar()"
+              [disabled]="emAndamento() || !data() || !hora()"
+            >
+              Remarcar
+            </button>
+            <button class="btn btn-sm" type="button" (click)="remarcando.set(false)">Voltar</button>
+          } @else {
+            <button class="btn btn-sm" type="button" (click)="remarcando.set(true)">
+              Remarcar
+            </button>
+            <button class="btn btn-sm" type="button" (click)="confirmandoCancelamento.set(true)">
+              Cancelar disparo
+            </button>
+          }
+        </div>
+      } @else if (d.situacao === 'Running' || d.situacao === 'Completed') {
+        <p class="nota">
+          O disparo já começou; não é mais possível cancelar nem remarcar — os e-mails que saíram
+          não têm como voltar.
+        </p>
+      }
+    </section>
+
+    <section class="card entregas">
+      <div class="entregas-cabecalho">
+        <h2>Destinatários</h2>
+        <select [ngModel]="filtroDeEntregas()" (ngModelChange)="filtroDeEntregas.set($event)">
+          <option value="">Todos</option>
+          <option value="Sent">Entregues</option>
+          <option value="Failed">Falharam</option>
+          <option value="Skipped">Não enviados</option>
+          <option value="Pending">Na fila</option>
+        </select>
+      </div>
+
+      @if (entregasFiltradas().length === 0) {
+        <p class="nota">Nenhum destinatário nesta situação.</p>
+      } @else {
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>E-mail</th>
+                <th>Situação</th>
+                <th>Tentativas</th>
+                <th>Detalhe</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entrega of entregasFiltradas(); track entrega.id) {
+                <tr>
+                  <td class="email">{{ entrega.email }}</td>
+                  <td>
+                    <span class="marca" [class]="entrega.situacao.toLowerCase()">
+                      {{ rotuloDaEntrega(entrega.situacao) }}
+                    </span>
+                  </td>
+                  <td>{{ entrega.tentativas }}</td>
+                  <td class="detalhe">
+                    @if (entrega.enviadoEm) {
+                      {{ formatarDataHora(entrega.enviadoEm) }}
+                    } @else if (entrega.erro) {
+                      <span class="erro-texto" [title]="entrega.erro">{{ entrega.erro }}</span>
+                    } @else {
+                      —
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  } @else {
+    <p class="vazio">Disparo não encontrado.</p>
+  }
+</div>

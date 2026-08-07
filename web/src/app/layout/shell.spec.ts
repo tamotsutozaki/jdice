@@ -71,7 +71,12 @@ describe('Shell', () => {
 
     // O adminGuard barraria de qualquer forma; oferecer o link seria um beco
     // sem saída.
-    expect(rotulosDeNavegacao(fixture)).toEqual(['Dashboard', 'Modelos', 'Destinatários']);
+    expect(rotulosDeNavegacao(fixture)).toEqual([
+      'Dashboard',
+      'Modelos',
+      'Destinatários',
+      'Disparos',
+    ]);
   });
 
   it('mostra a navegação de contas para administrador', () => {
@@ -81,6 +86,7 @@ describe('Shell', () => {
       'Dashboard',
       'Modelos',
       'Destinatários',
+      'Disparos',
       'Contas',
     ]);
   });

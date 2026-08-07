@@ -34,6 +34,19 @@ export const routes: Routes = [
           import('./features/templates/template-detalhe').then((m) => m.TemplateDetalhePagina),
       },
       {
+        path: 'disparos',
+        loadComponent: () => import('./features/disparos/disparos').then((m) => m.Disparos),
+      },
+      {
+        path: 'disparos/novo',
+        loadComponent: () => import('./features/disparos/novo-disparo').then((m) => m.NovoDisparo),
+      },
+      {
+        path: 'disparos/:id',
+        loadComponent: () =>
+          import('./features/disparos/disparo-detalhe').then((m) => m.DisparoDetalhe),
+      },
+      {
         path: 'destinatarios',
         loadComponent: () =>
           import('./features/destinatarios/destinatarios').then((m) => m.Destinatarios),

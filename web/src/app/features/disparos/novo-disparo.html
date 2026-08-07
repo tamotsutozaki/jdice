@@ -1,0 +1,254 @@
+<div class="pagina">
+  <div class="page-head">
+    <div>
+      <h1>Novo disparo</h1>
+      <p>Escolha o modelo, quem recebe e quando sai.</p>
+    </div>
+    <a class="btn" routerLink="/disparos">Voltar</a>
+  </div>
+
+  @if (erro()) {
+    <p class="alert alert-error" role="alert">{{ erro() }}</p>
+  }
+
+  <div class="colunas">
+    <div class="passos">
+      <section class="card passo">
+        <div class="passo-cabecalho">
+          <span class="numero">1</span>
+          <h2>Modelo</h2>
+        </div>
+
+        @if (modelos().length === 0) {
+          <p class="hint">
+            Nenhum modelo disponível. Crie um em <a routerLink="/modelos">Modelos</a> antes de
+            disparar.
+          </p>
+        } @else {
+          <label class="field">
+            <span>Modelo de e-mail</span>
+            <select [ngModel]="templateId()" (ngModelChange)="templateId.set($event)">
+              <option value="">Escolha um modelo</option>
+              @for (modelo of modelos(); track modelo.id) {
+                <option [value]="modelo.id">{{ modelo.nome }} (v{{ modelo.versaoAtual }})</option>
+              }
+            </select>
+            <small class="hint">Será usada a versão atual, congelada no momento do disparo.</small>
+          </label>
+
+          @if (modeloEscolhido(); as modelo) {
+            @if (modelo.variaveis.length > 0) {
+              <div class="variaveis">
+                <span class="rotulo">Variáveis do modelo</span>
+                <div class="lista-variaveis">
+                  @for (variavel of modelo.variaveis; track variavel) {
+                    <code>{{ variavel }}</code>
+                  }
+                </div>
+                <small class="hint">
+                  Preenchidas com os campos de cada destinatário. Quem não tiver o campo recebe o
+                  espaço em branco.
+                </small>
+              </div>
+            }
+          }
+        }
+      </section>
+
+      <section class="card passo">
+        <div class="passo-cabecalho">
+          <span class="numero">2</span>
+          <h2>Assunto</h2>
+        </div>
+
+        <label class="field">
+          <span>Assunto do e-mail</span>
+          <input
+            type="text"
+            [ngModel]="assunto()"
+            (ngModelChange)="assunto.set($event)"
+            placeholder="Bem-vindo, {{ '{{' }} nome {{ '}}' }}!"
+          />
+          <small class="hint">Aceita as mesmas variáveis do conteúdo.</small>
+        </label>
+
+        <label class="field">
+          <span>Nome do disparo (opcional)</span>
+          <input
+            type="text"
+            [ngModel]="nome()"
+            (ngModelChange)="nome.set($event)"
+            placeholder="Boas-vindas de agosto"
+          />
+          <small class="hint">Só para você identificar depois. Em branco, usa o assunto.</small>
+        </label>
+      </section>
+
+      <section class="card passo">
+        <div class="passo-cabecalho">
+          <span class="numero">3</span>
+          <h2>Destinatários</h2>
+        </div>
+
+        @if (listas().length === 0) {
+          <p class="hint">
+            Nenhuma lista criada. Monte uma em
+            <a routerLink="/destinatarios/listas">Destinatários</a>.
+          </p>
+        } @else {
+          <div class="listas">
+            @for (lista of listas(); track lista.id) {
+              <label class="lista-item" [class.escolhida]="listasEscolhidas().includes(lista.id)">
+                <input
+                  type="checkbox"
+                  [checked]="listasEscolhidas().includes(lista.id)"
+                  (change)="alternarLista(lista.id)"
+                />
+                <span class="lista-nome">{{ lista.nome }}</span>
+                <span class="lista-total">
+                  {{ lista.totalAtivos }} {{ lista.totalAtivos === 1 ? 'pessoa' : 'pessoas' }}
+                </span>
+              </label>
+            }
+          </div>
+          <small class="hint">
+            Quem se descadastrou fica de fora automaticamente, mesmo estando na lista.
+          </small>
+        }
+      </section>
+
+      <section class="card passo">
+        <div class="passo-cabecalho">
+          <span class="numero">4</span>
+          <h2>Quando</h2>
+        </div>
+
+        <div class="opcoes">
+          <label class="opcao" [class.escolhida]="quando() === 'agora'">
+            <input
+              type="radio"
+              name="quando"
+              value="agora"
+              [checked]="quando() === 'agora'"
+              (change)="quando.set('agora')"
+            />
+            <span>
+              <strong>Enviar agora</strong>
+              <small>Os e-mails começam a sair assim que você confirmar.</small>
+            </span>
+          </label>
+
+          <label class="opcao" [class.escolhida]="quando() === 'agendar'">
+            <input
+              type="radio"
+              name="quando"
+              value="agendar"
+              [checked]="quando() === 'agendar'"
+              (change)="quando.set('agendar')"
+            />
+            <span>
+              <strong>Agendar</strong>
+              <small>Dá para cancelar ou remarcar enquanto não sair.</small>
+            </span>
+          </label>
+        </div>
+
+        @if (quando() === 'agendar') {
+          <div class="agendamento">
+            <label class="field">
+              <span>Data</span>
+              <input type="date" [ngModel]="data()" (ngModelChange)="data.set($event)" />
+            </label>
+            <label class="field">
+              <span>Hora</span>
+              <input type="time" [ngModel]="hora()" (ngModelChange)="hora.set($event)" />
+            </label>
+            <p class="hint fuso">Horário de {{ fusoDoNavegador }}</p>
+          </div>
+        }
+      </section>
+    </div>
+
+    <aside class="resumo card">
+      <h2>Resumo</h2>
+
+      <dl>
+        <dt>Modelo</dt>
+        <dd>
+          @if (modeloEscolhido(); as modelo) {
+            {{ modelo.nome }} · v{{ modelo.versaoAtual }}
+          } @else {
+            <span class="pendente">não escolhido</span>
+          }
+        </dd>
+
+        <dt>Assunto</dt>
+        <dd>
+          @if (assunto()) {
+            {{ assunto() }}
+          } @else {
+            <span class="pendente">não preenchido</span>
+          }
+        </dd>
+
+        <dt>Destinatários</dt>
+        <dd>
+          @if (listasEscolhidas().length > 0) {
+            até {{ totalEstimado() }} {{ totalEstimado() === 1 ? 'pessoa' : 'pessoas' }}
+          } @else {
+            <span class="pendente">nenhuma lista</span>
+          }
+        </dd>
+
+        <dt>Envio</dt>
+        <dd>
+          @if (quando() === 'agora') {
+            imediato
+          } @else if (data() && hora()) {
+            {{ data() }} às {{ hora() }}
+          } @else {
+            <span class="pendente">data não definida</span>
+          }
+        </dd>
+      </dl>
+
+      @if (confirmando()) {
+        <div class="confirmacao">
+          <p>
+            @if (quando() === 'agora') {
+              Os e-mails começarão a sair agora e <strong>não há como cancelar</strong> depois que o
+              primeiro sair.
+            } @else {
+              O disparo ficará agendado e você poderá cancelar ou remarcar até a hora marcada.
+            }
+          </p>
+          <div class="confirmacao-acoes">
+            <button
+              class="btn btn-primary"
+              type="button"
+              (click)="confirmar()"
+              [disabled]="enviando()"
+            >
+              {{ enviando() ? 'Criando...' : 'Confirmar' }}
+            </button>
+            <button class="btn" type="button" (click)="confirmando.set(false)">Voltar</button>
+          </div>
+        </div>
+      } @else {
+        <button
+          class="btn btn-primary largo"
+          type="button"
+          (click)="confirmando.set(true)"
+          [disabled]="!podeConfirmar()"
+        >
+          {{ quando() === 'agora' ? 'Revisar e enviar' : 'Revisar e agendar' }}
+        </button>
+      }
+
+      <p class="nota">
+        O número de destinatários é uma estimativa: quem se descadastrar até a hora do envio fica de
+        fora.
+      </p>
+    </aside>
+  </div>
+</div>

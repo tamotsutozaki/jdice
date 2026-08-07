@@ -1,0 +1,93 @@
+<div class="pagina">
+  <div class="page-head">
+    <div>
+      <h1>Disparos</h1>
+      <p>{{ total() }} {{ total() === 1 ? 'disparo' : 'disparos' }}</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/disparos/novo">Novo disparo</a>
+  </div>
+
+  <form class="filtros" (ngSubmit)="carregar()">
+    <select [ngModel]="situacao()" (ngModelChange)="situacao.set($event)" name="situacao">
+      <option value="">Todas as situações</option>
+      <option value="Scheduled">Agendados</option>
+      <option value="Running">Enviando</option>
+      <option value="Completed">Concluídos</option>
+      <option value="Cancelled">Cancelados</option>
+    </select>
+    <button class="btn btn-sm" type="submit">Filtrar</button>
+  </form>
+
+  @if (erro()) {
+    <p class="alert alert-error" role="alert">{{ erro() }}</p>
+  }
+
+  @if (carregando()) {
+    <p class="vazio">Carregando...</p>
+  } @else if (disparos().length === 0) {
+    <p class="vazio">Nenhum disparo ainda.</p>
+  } @else {
+    <ul class="lista">
+      @for (disparo of disparos(); track disparo.id) {
+        <li class="card cartao">
+          <div class="cartao-corpo">
+            <div class="cartao-titulo">
+              <a [routerLink]="['/disparos', disparo.id]">{{ disparo.nome }}</a>
+              <span class="situacao" [class]="disparo.situacao.toLowerCase()">
+                {{ rotuloDaSituacao(disparo.situacao) }}
+              </span>
+            </div>
+
+            <div class="cartao-meta">
+              <span>v{{ disparo.versaoDoModelo }} do modelo</span>
+              <span>{{ formatarDataHora(disparo.agendadoPara) }}</span>
+              <span>
+                {{ disparo.resumo.total }}
+                {{ disparo.resumo.total === 1 ? 'destinatário' : 'destinatários' }}
+              </span>
+            </div>
+
+            @if (disparo.situacao !== 'Cancelled' && disparo.resumo.total > 0) {
+              <div class="progresso">
+                <div class="barra">
+                  <div class="preenchida" [style.width.%]="progresso(disparo)"></div>
+                </div>
+                <span class="numeros">
+                  {{ disparo.resumo.enviados }} enviados
+                  @if (disparo.resumo.falhados > 0) {
+                    · {{ disparo.resumo.falhados }} falharam
+                  }
+                  @if (disparo.resumo.pulados > 0) {
+                    · {{ disparo.resumo.pulados }} pulados
+                  }
+                </span>
+              </div>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (totalDePaginas() > 1) {
+      <nav class="paginacao">
+        <button
+          class="btn btn-sm"
+          type="button"
+          [disabled]="pagina() <= 1"
+          (click)="carregar(pagina() - 1)"
+        >
+          Anterior
+        </button>
+        <span>Página {{ pagina() }} de {{ totalDePaginas() }}</span>
+        <button
+          class="btn btn-sm"
+          type="button"
+          [disabled]="pagina() >= totalDePaginas()"
+          (click)="carregar(pagina() + 1)"
+        >
+          Próxima
+        </button>
+      </nav>
+    }
+  }
+</div>

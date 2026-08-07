@@ -27,6 +27,9 @@ public sealed class CampaignProcessor(
     /// <summary>Quantas entregas buscar por vez, para não carregar milhares na memória.</summary>
     private const int TamanhoDoLote = 100;
 
+    /// <summary>Folga aceita entre o relógio do worker e o de quem agendou.</summary>
+    private static readonly TimeSpan ToleranciaDeAdiantamento = TimeSpan.FromMinutes(1);
+
     public async Task ProcessAsync(Guid campaignId, CancellationToken cancellationToken = default)
     {
         var campaign = await campaigns.FindHeaderAsync(campaignId, cancellationToken);
@@ -43,8 +46,25 @@ public sealed class CampaignProcessor(
             return;
         }
 
+        // Confere a hora aqui também, e não só no agendador. Quem garante o
+        // horário é o Hangfire, mas um reprocessamento manual ou uma falha
+        // dele mandaria a mensagem antes do combinado — e e-mail enviado cedo
+        // não tem como voltar. A tolerância existe porque o relógio do worker
+        // e o de quem agendou não são exatamente o mesmo.
+        var agora = clock.GetUtcNow();
+
+        if (campaign.ScheduledFor > agora.Add(ToleranciaDeAdiantamento))
+        {
+            logger.LogWarning(
+                "Disparo {Id} está agendado para {Quando} e não deve sair agora.",
+                campaignId,
+                campaign.ScheduledFor);
+
+            return;
+        }
+
         // Se outro worker já assumiu, este desiste em vez de reprocessar.
-        if (!campaign.TryStart(clock.GetUtcNow()) && campaign.Status is not CampaignStatus.Running)
+        if (!campaign.TryStart(agora) && campaign.Status is not CampaignStatus.Running)
         {
             logger.LogInformation("Disparo {Id} já foi processado.", campaignId);
             return;

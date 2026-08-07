@@ -39,6 +39,7 @@ export class Shell {
     { rotulo: 'Dashboard', rota: '/', icone: 'grid', exata: true },
     { rotulo: 'Modelos', rota: '/modelos', icone: 'lista' },
     { rotulo: 'Destinatários', rota: '/destinatarios', icone: 'pessoas' },
+    { rotulo: 'Disparos', rota: '/disparos', icone: 'enviar' },
     { rotulo: 'Contas', rota: '/usuarios', icone: 'engrenagem', somenteAdmin: true },
   ];
 
