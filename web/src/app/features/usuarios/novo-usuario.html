@@ -1,0 +1,59 @@
+<main class="pagina">
+  <header>
+    <div>
+      <h1>Cadastrar usuário</h1>
+      <p>Contas novas só podem ser criadas por administradores.</p>
+    </div>
+    <a routerLink="/">Voltar</a>
+  </header>
+
+  <form class="card" [formGroup]="form" (ngSubmit)="criar()">
+    @if (erro()) {
+      <p class="aviso erro" role="alert">{{ erro() }}</p>
+    }
+
+    @if (criado()) {
+      <p class="aviso sucesso" role="status">Conta criada para {{ criado() }}.</p>
+    }
+
+    <label>
+      <span>E-mail</span>
+      <input
+        type="email"
+        formControlName="email"
+        autocomplete="off"
+        placeholder="pessoa@empresa.com"
+      />
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <small>Informe um e-mail válido.</small>
+      }
+    </label>
+
+    <label>
+      <span>Senha</span>
+      <input type="password" formControlName="senha" autocomplete="new-password" />
+      @if (form.controls.senha.touched && form.controls.senha.invalid) {
+        <small>
+          A senha precisa ter entre {{ politica.minimumLength }} e
+          {{ politica.maximumLength }} caracteres.
+        </small>
+      } @else {
+        <small class="dica">Mínimo de {{ politica.minimumLength }} caracteres.</small>
+      }
+    </label>
+
+    <label>
+      <span>Perfil</span>
+      <select formControlName="role">
+        @for (perfil of perfis; track perfil) {
+          <option [value]="perfil">{{ perfil }}</option>
+        }
+      </select>
+      <small class="dica"> Administradores também podem cadastrar outras contas. </small>
+    </label>
+
+    <button type="submit" [disabled]="enviando()">
+      {{ enviando() ? 'Cadastrando...' : 'Cadastrar' }}
+    </button>
+  </form>
+</main>

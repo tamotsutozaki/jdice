@@ -100,6 +100,12 @@ derrube a API, e para o teste de integração poder subir sem infraestrutura.
 | `GET /api/auth/me` | autenticado | quem está logado |
 | `POST /api/auth/users` | **Admin** | cria conta |
 
+No front, o cadastro fica em `/usuarios/novo`, protegido pelo `adminGuard`, e o
+link para ele só aparece para quem é administrador — oferecê-lo a quem seria
+barrado pelo guard seria um beco sem saída. O guard evita a ida à rede, mas quem
+dá a palavra final é o servidor: a tela trata o `403` caso a sessão mude de
+perfil no meio do caminho.
+
 O token é um JWT em **cookie httpOnly**, não em `localStorage`: o JavaScript não
 consegue lê-lo, então um XSS não rouba a sessão. Como o front e a API são
 servidos pela mesma origem, o cookie usa `SameSite=Strict` e não há CSRF a

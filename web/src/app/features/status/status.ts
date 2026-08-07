@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { HealthService, HealthState } from '../../core/health/health.service';
@@ -10,6 +10,7 @@ import { HealthService, HealthState } from '../../core/health/health.service';
  */
 @Component({
   selector: 'app-status',
+  imports: [RouterLink],
   templateUrl: './status.html',
   styleUrl: './status.scss',
 })

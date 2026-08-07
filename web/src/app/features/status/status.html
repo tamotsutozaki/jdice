@@ -14,6 +14,14 @@
     }
   </header>
 
+  @if (isAdmin()) {
+    <!-- Só para administradores: o endpoint recusa os demais, e oferecer o
+         link a quem seria barrado pelo guard é um beco sem saída. -->
+    <nav class="acoes">
+      <a routerLink="/usuarios/novo">Cadastrar usuário</a>
+    </nav>
+  }
+
   <section class="checks">
     <div class="check" [class]="live()">
       <span class="name">API</span>
