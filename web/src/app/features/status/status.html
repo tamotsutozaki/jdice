@@ -29,6 +29,11 @@
       <span class="atalho-desc">Criar modelos, versionar conteúdo e testar a renderização.</span>
     </a>
 
+    <a class="card atalho" routerLink="/destinatarios">
+      <span class="atalho-titulo">Destinatários</span>
+      <span class="atalho-desc">Cadastrar pessoas, montar listas e importar planilhas.</span>
+    </a>
+
     @if (isAdmin()) {
       <a class="card atalho" routerLink="/usuarios">
         <span class="atalho-titulo">Contas</span>
@@ -37,7 +42,5 @@
     }
   </section>
 
-  <p class="rodape-nota">
-    Destinatários entram na Fase 3, disparos na Fase 4 e agendamento na Fase 5.
-  </p>
+  <p class="rodape-nota">Disparos entram na Fase 4 e agendamento na Fase 5.</p>
 </div>

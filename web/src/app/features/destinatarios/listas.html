@@ -1,0 +1,114 @@
+<div class="pagina">
+  <div class="page-head">
+    <div>
+      <h1>Listas</h1>
+      <p>{{ listas().length }} {{ listas().length === 1 ? 'lista' : 'listas' }}</p>
+    </div>
+    <div class="head-acoes">
+      <a class="btn" routerLink="/destinatarios">Destinatários</a>
+      @if (!criando()) {
+        <button class="btn btn-primary" type="button" (click)="criando.set(true)">
+          Nova lista
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (erro()) {
+    <p class="alert alert-error" role="alert">{{ erro() }}</p>
+  }
+
+  @if (aviso()) {
+    <p class="alert alert-success" role="status">{{ aviso() }}</p>
+  }
+
+  @if (criando()) {
+    <section class="card nova">
+      <div class="campos">
+        <label class="field">
+          <span>Nome</span>
+          <input
+            type="text"
+            [ngModel]="nome()"
+            (ngModelChange)="nome.set($event)"
+            placeholder="Clientes ativos"
+          />
+        </label>
+        <label class="field">
+          <span>Descrição</span>
+          <input
+            type="text"
+            [ngModel]="descricao()"
+            (ngModelChange)="descricao.set($event)"
+            placeholder="Quem comprou nos últimos 12 meses"
+          />
+        </label>
+      </div>
+      <div class="acoes">
+        <button class="btn btn-primary" type="button" (click)="criar()" [disabled]="salvando()">
+          {{ salvando() ? 'Criando...' : 'Criar lista' }}
+        </button>
+        <button class="btn" type="button" (click)="criando.set(false)">Cancelar</button>
+      </div>
+    </section>
+  }
+
+  @if (carregando()) {
+    <p class="vazio">Carregando...</p>
+  } @else if (listas().length === 0) {
+    <p class="vazio">Nenhuma lista ainda. Crie uma para agrupar destinatários.</p>
+  } @else {
+    <ul class="lista">
+      @for (lista of listas(); track lista.id) {
+        <li class="card cartao">
+          <div class="cartao-corpo">
+            <a class="nome" [routerLink]="['/destinatarios']" [queryParams]="{ lista: lista.id }">
+              {{ lista.nome }}
+            </a>
+            @if (lista.descricao) {
+              <p class="descricao">{{ lista.descricao }}</p>
+            }
+            <div class="meta">
+              <span>
+                {{ lista.totalDeMembros }}
+                {{ lista.totalDeMembros === 1 ? 'pessoa' : 'pessoas' }}
+              </span>
+              @if (lista.totalDeMembros !== lista.totalAtivos) {
+                <span class="inativos">
+                  {{ lista.totalAtivos }} ainda {{ lista.totalAtivos === 1 ? 'recebe' : 'recebem' }}
+                </span>
+              }
+            </div>
+          </div>
+
+          @if (isAdmin()) {
+            <div class="cartao-acao">
+              @if (confirmando() === lista.id) {
+                <button class="btn btn-sm btn-danger" type="button" (click)="remover(lista)">
+                  Confirmar
+                </button>
+                <button class="btn btn-sm" type="button" (click)="confirmando.set(null)">
+                  Cancelar
+                </button>
+              } @else {
+                <button
+                  class="btn btn-sm"
+                  type="button"
+                  (click)="confirmando.set(lista.id)"
+                  [disabled]="emAndamento() === lista.id"
+                >
+                  Apagar
+                </button>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <p class="nota-final">
+    Apagar uma lista não apaga ninguém: a lista é um agrupamento, e os destinatários continuam
+    cadastrados e em suas outras listas.
+  </p>
+</div>

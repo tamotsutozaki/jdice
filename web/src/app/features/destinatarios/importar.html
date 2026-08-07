@@ -1,0 +1,112 @@
+<div class="pagina">
+  <div class="page-head">
+    <div>
+      <h1>Importar destinatários</h1>
+      <p>Envie uma planilha em CSV com uma coluna de e-mail.</p>
+    </div>
+    <a class="btn" routerLink="/destinatarios">Voltar</a>
+  </div>
+
+  <section class="card formato">
+    <h2>Como o arquivo deve ser</h2>
+    <p>
+      A primeira linha é o cabeçalho e precisa ter uma coluna <code>email</code>. A coluna
+      <code>nome</code> é opcional, e qualquer outra coluna vira um campo do destinatário, que
+      poderá ser usado como variável no modelo de e-mail.
+    </p>
+    <pre>
+email;nome;empresa;plano
+ana&#64;empresa.com;Ana Souza;Acme;Premium
+bruno&#64;empresa.com;Bruno Lima;Beta;Básico</pre>
+    <p class="dica">
+      Aceita ponto e vírgula ou vírgula como separador, e lê acentuação salva pelo Excel.
+    </p>
+  </section>
+
+  <section class="card envio">
+    <label class="field">
+      <span>Arquivo</span>
+      <input type="file" accept=".csv,text/csv" (change)="aoEscolherArquivo($event)" />
+    </label>
+
+    <label class="field">
+      <span>Incluir numa lista (opcional)</span>
+      <select [ngModel]="listaId()" (ngModelChange)="listaId.set($event)" name="lista">
+        <option value="">Não incluir em nenhuma lista</option>
+        @for (lista of listas(); track lista.id) {
+          <option [value]="lista.id">{{ lista.nome }}</option>
+        }
+      </select>
+      <small class="hint"> Quem já estiver cadastrado é atualizado, não duplicado. </small>
+    </label>
+
+    <button
+      class="btn btn-primary"
+      type="button"
+      (click)="importar()"
+      [disabled]="!arquivo() || enviando()"
+    >
+      {{ enviando() ? 'Processando...' : 'Importar' }}
+    </button>
+  </section>
+
+  @if (erro()) {
+    <p class="alert alert-error" role="alert">{{ erro() }}</p>
+  }
+
+  @if (resultado(); as r) {
+    <section class="card resultado">
+      <h2>Resultado</h2>
+
+      <div class="numeros">
+        <div class="numero">
+          <span class="valor">{{ r.criados }}</span>
+          <span class="rotulo">{{ r.criados === 1 ? 'novo' : 'novos' }}</span>
+        </div>
+        <div class="numero">
+          <span class="valor">{{ r.atualizados }}</span>
+          <span class="rotulo">{{ r.atualizados === 1 ? 'atualizado' : 'atualizados' }}</span>
+        </div>
+        <div class="numero" [class.tem-erro]="r.recusados.length > 0">
+          <span class="valor">{{ r.recusados.length }}</span>
+          <span class="rotulo">{{ r.recusados.length === 1 ? 'recusado' : 'recusados' }}</span>
+        </div>
+      </div>
+
+      @if (r.colunasLivres.length > 0) {
+        <p class="dica">
+          Campos criados a partir das colunas extras:
+          @for (coluna of r.colunasLivres; track coluna) {
+            <code>{{ coluna }}</code>
+          }
+        </p>
+      }
+
+      @if (r.recusados.length > 0) {
+        <div class="recusadas">
+          <h3>Linhas não importadas</h3>
+          <p class="dica">
+            O resto do arquivo foi importado normalmente. Corrija estas linhas e envie de novo —
+            quem já entrou será apenas atualizado.
+          </p>
+          <ul>
+            @for (recusada of r.recusados; track recusada.linha + recusada.motivo) {
+              <li>
+                @if (recusada.linha > 0) {
+                  <span class="linha">Linha {{ recusada.linha }}</span>
+                }
+                <span class="motivo">{{ recusada.motivo }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      } @else if (r.importados > 0) {
+        <p class="tudo-certo">Todas as linhas do arquivo foram importadas.</p>
+      }
+
+      @if (r.importados > 0) {
+        <a class="btn btn-primary" routerLink="/destinatarios">Ver destinatários</a>
+      }
+    </section>
+  }
+</div>

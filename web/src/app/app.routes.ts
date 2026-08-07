@@ -34,6 +34,26 @@ export const routes: Routes = [
           import('./features/templates/template-detalhe').then((m) => m.TemplateDetalhePagina),
       },
       {
+        path: 'destinatarios',
+        loadComponent: () =>
+          import('./features/destinatarios/destinatarios').then((m) => m.Destinatarios),
+      },
+      {
+        path: 'destinatarios/novo',
+        loadComponent: () =>
+          import('./features/destinatarios/novo-destinatario').then((m) => m.NovoDestinatario),
+      },
+      {
+        path: 'destinatarios/importar',
+        loadComponent: () =>
+          import('./features/destinatarios/importar').then((m) => m.ImportarDestinatarios),
+      },
+      {
+        path: 'destinatarios/listas',
+        loadComponent: () =>
+          import('./features/destinatarios/listas').then((m) => m.ListasDeDestinatarios),
+      },
+      {
         path: 'usuarios',
         canActivate: [adminGuard],
         loadComponent: () => import('./features/usuarios/usuarios').then((m) => m.Usuarios),

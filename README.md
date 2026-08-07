@@ -204,8 +204,46 @@ Conteúdo com erro de sintaxe é recusado ao salvar, já que a versão não pode
 ser corrigida depois. No preview, o mesmo erro volta junto da resposta em vez de
 virar `400`: quem está escrevendo precisa ver o problema enquanto escreve.
 
+## Destinatários
+
+Funcionalidade **nova**: o projeto original não tinha destinatários. A tela de
+envio lia `MOCK_LISTS` escrito no JSX, com "Lista Sul, 847 contatos" fixo no
+código.
+
+O destinatário existe uma vez só, identificado pelo e-mail, e participa de
+quantas listas for preciso. Além de e-mail e nome, guarda **campos livres**
+vindos das colunas extras da planilha — são eles que permitirão personalizar o
+e-mail além do nome quando o disparo existir.
+
+**Descadastrar vale para todas as listas.** Quem pede para não receber mais
+espera parar de receber, e não parar só na lista de onde veio a mensagem que o
+incomodou. Sair de uma lista é operação diferente, e não afeta as outras.
+
+### Importação de CSV
+
+A primeira linha é o cabeçalho e precisa de uma coluna `email`; `nome` é
+opcional e qualquer outra coluna vira um campo do destinatário.
+
+```
+email;nome;empresa;plano
+ana@empresa.com;Ana Souza;Acme;Premium
+```
+
+O leitor foi escrito à mão porque o que importa não é apenas separar campos, e
+sim dizer, para cada linha recusada, **qual era o número dela e o motivo**.
+Trata o que aparece em arquivo real: acentuação salva pelo Excel em
+Windows-1252, o marcador de bytes que ele escreve e que grudaria no cabeçalho,
+ponto e vírgula como separador, campos entre aspas contendo o separador, aspas
+duplicadas e quebra de linha dentro de um campo.
+
+Linhas válidas entram e as problemáticas voltam num relatório — recusar mil
+linhas por causa de quatro erros faria a pessoa procurar o problema no escuro.
+Quem já existe é atualizado, não duplicado, e os campos são **mesclados** sobre
+os antigos: uma planilha só com `email;plano` não apaga a empresa cadastrada
+antes.
+
 ## Estado
 
-**Fase 2 — modelos de e-mail.** Versionamento imutável, Scriban, preview.
-Destinatários entram na Fase 3, envio na Fase 4, agendamento na Fase 5.
+**Fase 3 — destinatários.** Cadastro, listas, descadastro e importação de CSV.
+Envio entra na Fase 4 e agendamento na Fase 5.
 

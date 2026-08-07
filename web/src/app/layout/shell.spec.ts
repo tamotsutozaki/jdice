@@ -71,13 +71,18 @@ describe('Shell', () => {
 
     // O adminGuard barraria de qualquer forma; oferecer o link seria um beco
     // sem saída.
-    expect(rotulosDeNavegacao(fixture)).toEqual(['Dashboard', 'Modelos']);
+    expect(rotulosDeNavegacao(fixture)).toEqual(['Dashboard', 'Modelos', 'Destinatários']);
   });
 
   it('mostra a navegação de contas para administrador', () => {
     const fixture = configurar('Admin');
 
-    expect(rotulosDeNavegacao(fixture)).toEqual(['Dashboard', 'Modelos', 'Contas']);
+    expect(rotulosDeNavegacao(fixture)).toEqual([
+      'Dashboard',
+      'Modelos',
+      'Destinatários',
+      'Contas',
+    ]);
   });
 
   it('deriva as iniciais do e-mail de quem está logado', () => {

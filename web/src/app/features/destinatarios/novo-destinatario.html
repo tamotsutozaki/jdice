@@ -1,0 +1,75 @@
+<div class="pagina">
+  <div class="page-head">
+    <div>
+      <h1>Novo destinatário</h1>
+      <p>Para cadastrar muitos de uma vez, use a importação de CSV.</p>
+    </div>
+    <a class="btn" routerLink="/destinatarios">Voltar</a>
+  </div>
+
+  @if (erro()) {
+    <p class="alert alert-error" role="alert">{{ erro() }}</p>
+  }
+
+  <form class="card" [formGroup]="form" (ngSubmit)="salvar()">
+    <div class="principais">
+      <label class="field">
+        <span>E-mail</span>
+        <input type="email" formControlName="email" placeholder="pessoa@empresa.com" />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <small>Informe um e-mail válido.</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>Nome</span>
+        <input type="text" formControlName="nome" placeholder="Ana Souza" />
+      </label>
+
+      <label class="field">
+        <span>Lista</span>
+        <select formControlName="listaId">
+          <option value="">Não incluir em nenhuma</option>
+          @for (lista of listas(); track lista.id) {
+            <option [value]="lista.id">{{ lista.nome }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="campos-livres">
+      <div class="campos-cabecalho">
+        <span class="titulo">Campos personalizados</span>
+        <button class="btn btn-sm" type="button" (click)="adicionarCampo()">Adicionar campo</button>
+      </div>
+
+      @if (campos().length === 0) {
+        <p class="hint">
+          Empresa, plano, cidade — o que você quiser usar como variável no modelo de e-mail.
+        </p>
+      } @else {
+        @for (campo of campos(); track $index) {
+          <div class="campo">
+            <input
+              type="text"
+              placeholder="nome do campo"
+              [value]="campo.nome"
+              (input)="definirCampo($index, 'nome', $any($event.target).value)"
+            />
+            <input
+              type="text"
+              placeholder="valor"
+              [value]="campo.valor"
+              (input)="definirCampo($index, 'valor', $any($event.target).value)"
+            />
+            <button class="btn btn-sm" type="button" (click)="removerCampo($index)">Remover</button>
+          </div>
+        }
+      }
+    </div>
+
+    <button class="btn btn-primary" type="submit" [disabled]="enviando()">
+      {{ enviando() ? 'Salvando...' : 'Salvar destinatário' }}
+    </button>
+  </form>
+</div>

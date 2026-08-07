@@ -38,7 +38,8 @@ export class Shell {
   private readonly itens: ItemDeNavegacao[] = [
     { rotulo: 'Dashboard', rota: '/', icone: 'grid', exata: true },
     { rotulo: 'Modelos', rota: '/modelos', icone: 'lista' },
-    { rotulo: 'Contas', rota: '/usuarios', icone: 'pessoas', somenteAdmin: true },
+    { rotulo: 'Destinatários', rota: '/destinatarios', icone: 'pessoas' },
+    { rotulo: 'Contas', rota: '/usuarios', icone: 'engrenagem', somenteAdmin: true },
   ];
 
   protected readonly navegacao = computed(() =>
