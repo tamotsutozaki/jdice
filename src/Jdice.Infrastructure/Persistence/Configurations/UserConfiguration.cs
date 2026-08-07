@@ -34,5 +34,11 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(user => user.CreatedAt)
             .IsRequired();
+
+        builder.Property(user => user.DeactivatedAt);
+
+        // IsActive é derivado de DeactivatedAt e não tem coluna própria: duas
+        // fontes para o mesmo fato acabariam divergindo.
+        builder.Ignore(user => user.IsActive);
     }
 }

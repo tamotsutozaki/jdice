@@ -46,4 +46,47 @@ public sealed class UserService(
 
     public Task<User?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         users.FindByIdAsync(id, cancellationToken);
+
+    public Task<IReadOnlyList<User>> ListAsync(CancellationToken cancellationToken = default) =>
+        users.ListAsync(cancellationToken);
+
+    /// <summary>
+    /// Desativa a conta preservando a linha. Não remove o registro porque, a
+    /// partir da Fase 4, cada conta terá modelos e disparos associados — e
+    /// apagá-la transformaria "enviado por fulano" em "enviado por ninguém".
+    /// </summary>
+    /// <param name="requestedBy">Quem pediu a desativação, para impedir a autodesativação.</param>
+    /// <exception cref="UserNotFoundException">A conta não existe.</exception>
+    /// <exception cref="CannotDeactivateSelfException">Alguém tentou desativar a si mesmo.</exception>
+    /// <exception cref="LastAdministratorException">Sobraria zero administrador ativo.</exception>
+    public async Task DeactivateAsync(
+        Guid userId,
+        Guid requestedBy,
+        CancellationToken cancellationToken = default)
+    {
+        if (userId == requestedBy)
+        {
+            throw new CannotDeactivateSelfException();
+        }
+
+        var user = await users.FindByIdAsync(userId, cancellationToken)
+            ?? throw new UserNotFoundException(userId);
+
+        // Já desativada: nada a fazer, e nada a reclamar. Repetir o pedido não
+        // pode virar erro só porque alguém clicou duas vezes.
+        if (!user.IsActive)
+        {
+            return;
+        }
+
+        if (user.Role == UserRole.Admin
+            && await users.CountActiveAdministratorsAsync(cancellationToken) <= 1)
+        {
+            throw new LastAdministratorException();
+        }
+
+        user.Deactivate(clock.GetUtcNow());
+
+        await users.SaveChangesAsync(cancellationToken);
+    }
 }

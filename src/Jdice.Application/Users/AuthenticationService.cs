@@ -26,8 +26,14 @@ public sealed class AuthenticationService(
             return null;
         }
 
-        return passwordHasher.Verify(password, user.PasswordHash)
-            ? tokenService.Issue(user)
-            : null;
+        if (!passwordHasher.Verify(password, user.PasswordHash))
+        {
+            return null;
+        }
+
+        // Conta desativada recebe a mesma resposta de senha errada. Dizer
+        // "sua conta foi desativada" confirmaria a existência do e-mail para
+        // quem só está tentando adivinhar.
+        return user.IsActive ? tokenService.Issue(user) : null;
     }
 }

@@ -23,6 +23,9 @@ public static class AuthEndpoints
         // endpoint era público e aceitava a role no corpo — qualquer pessoa
         // criava um admin.
         group.MapPost("/users", CreateUserAsync).RequireAuthorization(AuthorizationPolicies.AdminOnly);
+        group.MapGet("/users", ListUsersAsync).RequireAuthorization(AuthorizationPolicies.AdminOnly);
+        group.MapDelete("/users/{id:guid}", DeactivateUserAsync)
+            .RequireAuthorization(AuthorizationPolicies.AdminOnly);
 
         return builder;
     }
@@ -110,4 +113,69 @@ public static class AuthEndpoints
             });
         }
     }
+
+    private static async Task<Ok<IReadOnlyList<UserListItemResponse>>> ListUsersAsync(
+        UserService userService,
+        CancellationToken cancellationToken)
+    {
+        var users = await userService.ListAsync(cancellationToken);
+
+        IReadOnlyList<UserListItemResponse> resposta = [.. users.Select(user =>
+            new UserListItemResponse(
+                user.Id,
+                user.Email,
+                user.Role.ToString(),
+                user.IsActive,
+                user.CreatedAt,
+                user.DeactivatedAt))];
+
+        return TypedResults.Ok(resposta);
+    }
+
+    private static async Task<Results<NoContent, NotFound<ProblemDetails>, Conflict<ProblemDetails>>>
+        DeactivateUserAsync(
+            Guid id,
+            ClaimsPrincipal principal,
+            UserService userService,
+            CancellationToken cancellationToken)
+    {
+        var subject = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+        if (!Guid.TryParse(subject, out var requestedBy))
+        {
+            return TypedResults.NotFound(Problema(
+                StatusCodes.Status404NotFound,
+                "Sessão inválida",
+                "Não foi possível identificar quem fez o pedido."));
+        }
+
+        try
+        {
+            await userService.DeactivateAsync(id, requestedBy, cancellationToken);
+
+            return TypedResults.NoContent();
+        }
+        catch (UserNotFoundException exception)
+        {
+            return TypedResults.NotFound(Problema(
+                StatusCodes.Status404NotFound, "Conta não encontrada", exception.Message));
+        }
+        catch (CannotDeactivateSelfException exception)
+        {
+            return TypedResults.Conflict(Problema(
+                StatusCodes.Status409Conflict, "Operação não permitida", exception.Message));
+        }
+        catch (LastAdministratorException exception)
+        {
+            return TypedResults.Conflict(Problema(
+                StatusCodes.Status409Conflict, "Último administrador", exception.Message));
+        }
+    }
+
+    private static ProblemDetails Problema(int status, string titulo, string detalhe) => new()
+    {
+        Status = status,
+        Title = titulo,
+        Detail = detalhe
+    };
 }

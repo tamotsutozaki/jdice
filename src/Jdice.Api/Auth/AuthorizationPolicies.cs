@@ -1,8 +1,10 @@
+using System.Security.Claims;
+using Jdice.Application.Abstractions;
 using Jdice.Domain.Users;
+using Jdice.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
-using Jdice.Infrastructure.Security;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -38,7 +40,9 @@ public static class AuthorizationPolicies
                         }
 
                         return Task.CompletedTask;
-                    }
+                    },
+
+                    OnTokenValidated = RejeitarSeContaInativaAsync
                 };
             });
 
@@ -73,5 +77,36 @@ public static class AuthorizationPolicies
             .AddPolicy(AdminOnly, policy => policy.RequireRole(nameof(UserRole.Admin)));
 
         return services;
+    }
+
+    /// <summary>
+    /// Confere, a cada requisição, se a conta do token ainda pode entrar.
+    /// <para>
+    /// Custa uma consulta por chamada autenticada — o que abre mão de parte da
+    /// vantagem de um token autocontido. É o preço de conseguir revogar
+    /// sessão: sem isso, desativar uma conta só teria efeito quando o token
+    /// vencesse, deixando a pessoa usando o sistema por até oito horas depois
+    /// de removida. Se um dia o volume incomodar, o caminho é um cache curto
+    /// das contas desativadas, não remover a verificação.
+    /// </para>
+    /// </summary>
+    private static async Task RejeitarSeContaInativaAsync(TokenValidatedContext context)
+    {
+        var subject = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+        if (!Guid.TryParse(subject, out var userId))
+        {
+            context.Fail("Token sem identificador de usuário.");
+            return;
+        }
+
+        var users = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+        var user = await users.FindByIdAsync(userId, context.HttpContext.RequestAborted);
+
+        // Conta apagada ou desativada depois da emissão do token.
+        if (user is null || !user.IsActive)
+        {
+            context.Fail("Conta inativa.");
+        }
     }
 }

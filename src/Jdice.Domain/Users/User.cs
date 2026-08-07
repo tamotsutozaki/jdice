@@ -33,6 +33,16 @@ public sealed class User
 
     public DateTimeOffset CreatedAt { get; private set; }
 
+    /// <summary>
+    /// Quando a conta foi desativada, ou <c>null</c> se está ativa. A linha é
+    /// preservada em vez de removida porque, a partir do momento em que
+    /// existirem modelos e disparos com autor, apagar a conta transformaria
+    /// "enviado por fulano" em "enviado por ninguém".
+    /// </summary>
+    public DateTimeOffset? DeactivatedAt { get; private set; }
+
+    public bool IsActive => DeactivatedAt is null;
+
     public static User Create(string email, string passwordHash, UserRole role, DateTimeOffset createdAt)
     {
         var normalizedEmail = NormalizeEmail(email);
@@ -61,6 +71,17 @@ public sealed class User
         }
 
         PasswordHash = passwordHash;
+    }
+
+    /// <summary>Idempotente: desativar de novo não altera a data original.</summary>
+    public void Deactivate(DateTimeOffset deactivatedAt)
+    {
+        DeactivatedAt ??= deactivatedAt;
+    }
+
+    public void Reactivate()
+    {
+        DeactivatedAt = null;
     }
 
     /// <summary>

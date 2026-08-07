@@ -99,12 +99,37 @@ derrube a API, e para o teste de integração poder subir sem infraestrutura.
 | `POST /api/auth/logout` | pública | apaga o cookie |
 | `GET /api/auth/me` | autenticado | quem está logado |
 | `POST /api/auth/users` | **Admin** | cria conta |
+| `GET /api/auth/users` | **Admin** | lista contas |
+| `DELETE /api/auth/users/{id}` | **Admin** | desativa conta |
 
-No front, o cadastro fica em `/usuarios/novo`, protegido pelo `adminGuard`, e o
-link para ele só aparece para quem é administrador — oferecê-lo a quem seria
-barrado pelo guard seria um beco sem saída. O guard evita a ida à rede, mas quem
-dá a palavra final é o servidor: a tela trata o `403` caso a sessão mude de
-perfil no meio do caminho.
+No front, a gestão fica em `/usuarios` e o cadastro em `/usuarios/novo`, ambos
+protegidos pelo `adminGuard`, e os links só aparecem para quem é administrador —
+oferecê-los a quem seria barrado pelo guard seria um beco sem saída. O guard
+evita a ida à rede, mas quem dá a palavra final é o servidor: as telas tratam o
+`403` caso a sessão mude de perfil no meio do caminho.
+
+### Desativação de contas
+
+`DELETE` **não apaga a linha**: marca `DeactivatedAt`. A partir da Fase 4 cada
+conta terá modelos e disparos associados, e remover o registro transformaria
+"enviado por fulano" em "enviado por ninguém".
+
+Três regras protegem a operação:
+
+- ninguém desativa a própria conta, o que trancaria a pessoa para fora no meio
+  do trabalho;
+- o último administrador ativo não pode ser desativado — sobrando zero, a única
+  saída seria alterar o banco na mão;
+- quem é desativado **perde a sessão na hora**. Como o token vale 8h e carrega a
+  role dentro dele, cada requisição autenticada confere se a conta ainda pode
+  entrar. Isso custa uma consulta por chamada e abre mão de parte da vantagem de
+  um token autocontido; é o preço de conseguir revogar acesso de verdade. Se o
+  volume incomodar, o caminho é um cache curto das contas desativadas, não
+  remover a verificação.
+
+Conta desativada recebe no login a mesma resposta de senha errada: dizer "sua
+conta foi desativada" confirmaria a existência do e-mail para quem está apenas
+tentando adivinhar.
 
 O token é um JWT em **cookie httpOnly**, não em `localStorage`: o JavaScript não
 consegue lê-lo, então um XSS não rouba a sessão. Como o front e a API são

@@ -1,0 +1,92 @@
+<main class="pagina">
+  <header>
+    <div>
+      <h1>Contas</h1>
+      <p>
+        {{ usuarios().length }}
+        {{ usuarios().length === 1 ? 'conta cadastrada' : 'contas cadastradas' }}, {{ ativos() }}
+        {{ ativos() === 1 ? 'ativa' : 'ativas' }}.
+      </p>
+    </div>
+    <div class="header-acoes">
+      <a class="principal" routerLink="/usuarios/novo">Cadastrar</a>
+      <a routerLink="/">Voltar</a>
+    </div>
+  </header>
+
+  @if (erro()) {
+    <p class="aviso erro" role="alert">{{ erro() }}</p>
+  }
+
+  @if (aviso()) {
+    <p class="aviso sucesso" role="status">{{ aviso() }}</p>
+  }
+
+  @if (carregando()) {
+    <p class="vazio">Carregando...</p>
+  } @else if (usuarios().length === 0) {
+    <p class="vazio">Nenhuma conta cadastrada.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>E-mail</th>
+          <th>Perfil</th>
+          <th>Situação</th>
+          <th>Criada em</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (usuario of usuarios(); track usuario.id) {
+          <tr [class.inativa]="!usuario.ativo">
+            <td>
+              {{ usuario.email }}
+              @if (ehVoce(usuario)) {
+                <span class="voce">você</span>
+              }
+            </td>
+            <td>
+              <span class="papel" [class.admin]="usuario.role === 'Admin'">{{ usuario.role }}</span>
+            </td>
+            <td>
+              @if (usuario.ativo) {
+                <span class="situacao ativa">Ativa</span>
+              } @else {
+                <span class="situacao">
+                  Desativada em {{ formatarData(usuario.desativadoEm) }}
+                </span>
+              }
+            </td>
+            <td class="data">{{ formatarData(usuario.criadoEm) }}</td>
+            <td class="acao">
+              @if (usuario.ativo && !ehVoce(usuario)) {
+                @if (confirmando() === usuario.id) {
+                  <span class="confirmar">
+                    <button type="button" class="perigo" (click)="desativar(usuario)">
+                      Confirmar
+                    </button>
+                    <button type="button" (click)="cancelar()">Cancelar</button>
+                  </span>
+                } @else {
+                  <button
+                    type="button"
+                    (click)="pedirConfirmacao(usuario.id)"
+                    [disabled]="desativando() === usuario.id"
+                  >
+                    {{ desativando() === usuario.id ? 'Desativando...' : 'Desativar' }}
+                  </button>
+                }
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <footer>
+    Desativar impede o acesso e encerra a sessão da pessoa imediatamente. A conta continua no
+    sistema para que o histórico do que ela criou permaneça atribuído a alguém.
+  </footer>
+</main>

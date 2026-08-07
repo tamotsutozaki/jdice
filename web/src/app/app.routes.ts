@@ -14,6 +14,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/status/status').then((m) => m.Status),
   },
   {
+    path: 'usuarios',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./features/usuarios/usuarios').then((m) => m.Usuarios),
+  },
+  {
     path: 'usuarios/novo',
     canActivate: [adminGuard],
     loadComponent: () => import('./features/usuarios/novo-usuario').then((m) => m.NovoUsuario),

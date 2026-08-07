@@ -29,6 +29,13 @@ internal sealed class FakeUserRepository : IUserRepository
     public Task<bool> AnyAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult(_users.Count > 0);
 
+    public Task<IReadOnlyList<User>> ListAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<User>>(
+            [.. _users.OrderByDescending(user => user.CreatedAt)]);
+
+    public Task<int> CountActiveAdministratorsAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(_users.Count(user => user.Role == UserRole.Admin && user.IsActive));
+
     public Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
         // Imita o índice único do banco: é ele, e não a checagem prévia, que

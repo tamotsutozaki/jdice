@@ -21,3 +21,11 @@ public sealed record CreateUserRequest(
 public sealed record CurrentUserResponse(Guid Id, string Email, string Role);
 
 public sealed record CreatedUserResponse(Guid Id, string Email, string Role);
+
+public sealed record UserListItemResponse(
+    Guid Id,
+    string Email,
+    string Role,
+    bool Ativo,
+    DateTimeOffset CriadoEm,
+    DateTimeOffset? DesativadoEm);

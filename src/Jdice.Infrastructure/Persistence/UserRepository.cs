@@ -23,6 +23,16 @@ public sealed class UserRepository(JdiceDbContext context) : IUserRepository
     public Task<bool> AnyAsync(CancellationToken cancellationToken = default) =>
         context.Users.AnyAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<User>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.Users
+            .OrderByDescending(user => user.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+    public Task<int> CountActiveAdministratorsAsync(CancellationToken cancellationToken = default) =>
+        context.Users.CountAsync(
+            user => user.Role == UserRole.Admin && user.DeactivatedAt == null,
+            cancellationToken);
+
     public Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
         context.Users.Add(user);
