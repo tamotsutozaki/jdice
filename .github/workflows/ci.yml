@@ -75,5 +75,8 @@ jobs:
       - name: Build da imagem da API
         run: docker build -f src/Jdice.Api/Dockerfile -t jdice-api:ci .
 
+      - name: Build da imagem do worker
+        run: docker build -f src/Jdice.Worker/Dockerfile -t jdice-worker:ci .
+
       - name: Build da imagem do front
         run: docker build -t jdice-web:ci ./web
