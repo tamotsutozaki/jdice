@@ -1,7 +1,17 @@
 <main class="status">
   <header>
-    <h1>JDice</h1>
-    <p>Gerenciador de disparo de e-mails corporativos</p>
+    <div>
+      <h1>JDice</h1>
+      <p>Gerenciador de disparo de e-mails corporativos</p>
+    </div>
+
+    @if (user(); as usuario) {
+      <div class="sessao">
+        <span class="email">{{ usuario.email }}</span>
+        <span class="papel" [class.admin]="isAdmin()">{{ usuario.role }}</span>
+        <button type="button" (click)="sair()" [disabled]="saindo()">Sair</button>
+      </div>
+    }
   </header>
 
   <section class="checks">
@@ -16,5 +26,5 @@
     </div>
   </section>
 
-  <footer>Fase 0 — esqueleto. O login entra na Fase 1.</footer>
+  <footer>Fase 1 — autenticação. Modelos de e-mail entram na Fase 2.</footer>
 </main>

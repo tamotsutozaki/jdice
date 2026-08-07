@@ -28,6 +28,14 @@ services:
       # O front é servido pelo nginx na mesma origem, então CORS fica vazio aqui.
       # Só é preenchido quando se roda `ng serve` contra a API do compose.
       Cors__AllowedOrigins__0: ${CORS_ORIGIN:-http://localhost:4200}
+
+      # Sem default de propósito: um segredo com valor padrão vira o segredo de
+      # produção de quem esqueceu de configurar. O compose recusa subir sem ele.
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?defina JWT_SIGNING_KEY no .env (minimo 32 bytes)}
+
+      # Administrador inicial, criado apenas se o banco não tiver nenhuma conta.
+      Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-}
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:-}
     ports:
       - "${API_PORT:-5080}:8080"
     depends_on:

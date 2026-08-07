@@ -40,6 +40,10 @@ A direção das dependências entre camadas é verificada por teste
 ### Tudo em containers
 
 ```bash
+cp .env.example .env
+# gere a chave e cole em JWT_SIGNING_KEY, e defina SEED_ADMIN_PASSWORD
+openssl rand -base64 48
+
 docker compose up --build
 ```
 
@@ -47,8 +51,14 @@ docker compose up --build
 - API: http://localhost:5080
 - Health: http://localhost:5080/health/ready
 
-Não é preciso criar `.env` — todas as variáveis têm default no compose.
-Para customizar, copie `.env.example` para `.env`.
+O `.env` é obrigatório: `JWT_SIGNING_KEY` não tem valor padrão e o compose
+recusa subir sem ela. É proposital — um segredo com default acaba virando o
+segredo de produção de alguém. As demais variáveis têm default.
+
+O administrador inicial é criado a partir de `SEED_ADMIN_EMAIL` e
+`SEED_ADMIN_PASSWORD`, e apenas quando o banco ainda não tem nenhuma conta.
+Sem eles a aplicação sobe, avisa no log e fica sem forma de entrar — não
+existe usuário padrão embutido no código.
 
 ### Desenvolvimento local
 
@@ -81,9 +91,35 @@ cd web && npm test    # frontend
 A separação existe para que uma indisponibilidade momentânea do banco não
 derrube a API, e para o teste de integração poder subir sem infraestrutura.
 
+## Autenticação
+
+| Rota | Acesso | O que faz |
+|---|---|---|
+| `POST /api/auth/login` | pública | valida credencial e grava o cookie de sessão |
+| `POST /api/auth/logout` | pública | apaga o cookie |
+| `GET /api/auth/me` | autenticado | quem está logado |
+| `POST /api/auth/users` | **Admin** | cria conta |
+
+O token é um JWT em **cookie httpOnly**, não em `localStorage`: o JavaScript não
+consegue lê-lo, então um XSS não rouba a sessão. Como o front e a API são
+servidos pela mesma origem, o cookie usa `SameSite=Strict` e não há CSRF a
+tratar. A role viaja dentro do token, o que dispensa consultar o banco a cada
+requisição.
+
+Diferenças deliberadas em relação ao projeto original, onde cada uma destas era
+um problema real:
+
+- criar conta é restrito a Admin — antes o endpoint era público e ainda aceitava
+  a role no corpo, então qualquer pessoa criava um administrador;
+- a expiração do token é calculada em UTC — antes somava horas no fuso da
+  máquina e carimbava offset `-03:00` fixo, o que dava validade errada fora de
+  Brasília;
+- e-mail e senha errados devolvem a mesma resposta, e o login gasta o mesmo
+  tempo nos dois casos, para não revelar quem tem conta.
+
 ## Estado
 
-**Fase 0 — esqueleto.** Solução, health checks, front mínimo, compose e CI.
-Sem domínio ainda: autenticação entra na Fase 1, templates na Fase 2,
-destinatários na Fase 3, envio na Fase 4, agendamento na Fase 5.
+**Fase 1 — autenticação.** Contas, login, perfis e seed do administrador.
+Templates entram na Fase 2, destinatários na Fase 3, envio na Fase 4,
+agendamento na Fase 5.
 
