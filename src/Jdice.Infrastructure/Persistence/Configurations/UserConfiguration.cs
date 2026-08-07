@@ -12,6 +12,9 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(user => user.Id);
 
+        // Identificador gerado pelo domínio, não pelo banco.
+        builder.Property(user => user.Id).ValueGeneratedNever();
+
         builder.Property(user => user.Email)
             .HasMaxLength(320) // limite do RFC 5321 para endereço de e-mail
             .IsRequired();

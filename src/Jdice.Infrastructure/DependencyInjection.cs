@@ -1,6 +1,7 @@
 using Jdice.Application.Abstractions;
 using Jdice.Infrastructure.Persistence;
 using Jdice.Infrastructure.Security;
+using Jdice.Infrastructure.Templates;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,8 +18,10 @@ public static class DependencyInjection
             options.UseNpgsql(configuration.GetConnectionString("Postgres")));
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ITemplateRepository, TemplateRepository>();
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddSingleton<ITemplateRenderer, ScribanTemplateRenderer>();
 
         services.AddOptions<JwtOptions>()
             .Bind(configuration.GetSection(JwtOptions.SectionName))

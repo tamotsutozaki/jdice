@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Jdice.Api.Auth;
 using Jdice.Api.Setup;
+using Jdice.Api.Templates;
 using Jdice.Application;
 using Jdice.Infrastructure;
 using Jdice.Infrastructure.Persistence;
@@ -84,6 +85,7 @@ app.MapHealthChecks("/health/ready", new()
 });
 
 app.MapAuthEndpoints();
+app.MapTemplateEndpoints();
 
 // Desligável para que o teste de integração controle quando o banco é
 // preparado — e para que, na Fase 4, o worker não dispute a aplicação das

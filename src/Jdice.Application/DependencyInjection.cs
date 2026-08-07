@@ -1,3 +1,4 @@
+using Jdice.Application.Templates;
 using Jdice.Application.Users;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,7 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<AuthenticationService>();
         services.AddScoped<UserService>();
+        services.AddScoped<TemplateService>();
 
         return services;
     }

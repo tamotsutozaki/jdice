@@ -3,6 +3,7 @@ using System;
 using Jdice.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Jdice.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(JdiceDbContext))]
-    partial class JdiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260807185241_AdicionarModelosDeEmail")]
+    partial class AdicionarModelosDeEmail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,6 +28,7 @@ namespace Jdice.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Jdice.Domain.Templates.Template", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("ArchivedAt")
@@ -65,6 +69,7 @@ namespace Jdice.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Jdice.Domain.Templates.TemplateVersion", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -98,6 +103,7 @@ namespace Jdice.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Jdice.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
