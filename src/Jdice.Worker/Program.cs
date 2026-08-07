@@ -2,11 +2,27 @@ using Hangfire;
 using Jdice.Application;
 using Jdice.Infrastructure;
 using Jdice.Worker;
+using Serilog;
 
 // Processo separado da API de propósito. A API só enfileira e responde; quem
 // executa disparo é este worker, que pode ser escalado sozinho quando o volume
 // de envio crescer, sem multiplicar o servidor HTTP junto.
 var builder = Host.CreateApplicationBuilder(args);
+
+// O mesmo log estruturado da API. Com vários workers, saber de qual container
+// veio cada linha é o que torna o log utilizável.
+//
+// Os níveis ficam em `Serilog:MinimumLevel` do appsettings, e não na seção
+// `Logging` do ASP.NET: o AddSerilog substitui a ILoggerFactory, então os
+// filtros do Microsoft.Extensions.Logging deixam de ser consultados.
+builder.Services.AddSerilog((services, config) => config
+    .ReadFrom.Configuration(builder.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Aplicacao", "Jdice.Worker")
+    .Enrich.WithProperty("Worker", Environment.MachineName)
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"));
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);

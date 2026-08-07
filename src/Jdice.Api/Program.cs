@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
+using Serilog;
 using Jdice.Api.Auth;
 using Jdice.Api.Campaigns;
+using Jdice.Api.Dashboard;
 using Jdice.Api.Recipients;
 using Jdice.Api.Setup;
 using Jdice.Api.Templates;
@@ -9,6 +11,22 @@ using Jdice.Infrastructure;
 using Jdice.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Log estruturado: cada evento carrega os campos como dados, e não embutidos
+// numa frase. É o que permite responder "todos os disparos do usuário X" sem
+// depender de expressão regular sobre texto solto.
+//
+// Os níveis ficam em `Serilog:MinimumLevel` do appsettings, e não na seção
+// `Logging`: o AddSerilog substitui a ILoggerFactory, então os filtros do
+// Microsoft.Extensions.Logging deixam de ser consultados — configurá-los ali
+// não teria efeito nenhum, e o log do ASP.NET afogaria o resto.
+builder.Services.AddSerilog((services, config) => config
+    .ReadFrom.Configuration(builder.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Aplicacao", "Jdice.Api")
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"));
 
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
@@ -63,6 +81,23 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Uma linha por requisição, com rota, situação e duração — em vez das três
+// que o padrão emite.
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate =
+        "{RequestMethod} {RequestPath} respondeu {StatusCode} em {Elapsed:0} ms";
+
+    // Ruído de verificação de saúde esconde o que importa: o compose consulta
+    // a cada dez segundos, para sempre.
+    options.GetLevel = (http, _, erro) =>
+        erro is not null || http.Response.StatusCode >= 500
+            ? Serilog.Events.LogEventLevel.Error
+            : http.Request.Path.StartsWithSegments("/health")
+                ? Serilog.Events.LogEventLevel.Verbose
+                : Serilog.Events.LogEventLevel.Information;
+});
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
@@ -95,6 +130,7 @@ app.MapAuthEndpoints();
 app.MapTemplateEndpoints();
 app.MapRecipientEndpoints();
 app.MapCampaignEndpoints();
+app.MapDashboardEndpoints();
 
 // Desligável para que o teste de integração controle quando o banco é
 // preparado — e para que, na Fase 4, o worker não dispute a aplicação das

@@ -2,48 +2,88 @@
   <div class="page-head">
     <div>
       <h1>Dashboard</h1>
-      <p>Situação do sistema e atalhos do dia a dia.</p>
+      <p>Números do sistema e atalhos do dia a dia.</p>
     </div>
+    <a class="btn btn-primary" routerLink="/disparos/novo">Novo disparo</a>
   </div>
 
-  <section class="stat-grid">
-    <div class="card stat-card" [class]="live()">
-      <span class="stat-label">API</span>
-      <span class="stat-value">{{ label(live()) }}</span>
-    </div>
+  @if (erro()) {
+    <p class="alert alert-error" role="alert">{{ erro() }}</p>
+  }
 
-    <div class="card stat-card" [class]="ready()">
-      <span class="stat-label">Banco de dados</span>
-      <span class="stat-value">{{ label(ready()) }}</span>
-    </div>
+  @if (carregando()) {
+    <p class="vazio">Carregando...</p>
+  } @else if (painel(); as p) {
+    <section class="stat-grid">
+      <div class="card stat-card">
+        <span class="stat-label">E-mails entregues</span>
+        <span class="stat-value">{{ p.emailsEnviados }}</span>
+        <span class="stat-sub">{{ p.enviadosNosUltimos30Dias }} nos últimos 30 dias</span>
+      </div>
 
-    <div class="card stat-card">
-      <span class="stat-label">Seu perfil</span>
-      <span class="stat-value">{{ isAdmin() ? 'Administrador' : 'Usuário' }}</span>
-    </div>
-  </section>
+      <div class="card stat-card">
+        <span class="stat-label">Destinatários ativos</span>
+        <span class="stat-value">{{ p.destinatarios }}</span>
+        <span class="stat-sub">{{ p.listas }} {{ p.listas === 1 ? 'lista' : 'listas' }}</span>
+      </div>
 
-  <section class="atalhos">
-    <a class="card atalho" routerLink="/modelos">
-      <span class="atalho-titulo">Modelos de e-mail</span>
-      <span class="atalho-desc">Criar modelos, versionar conteúdo e testar a renderização.</span>
-    </a>
+      <div class="card stat-card">
+        <span class="stat-label">Modelos</span>
+        <span class="stat-value">{{ p.modelos }}</span>
+        <span class="stat-sub">em uso</span>
+      </div>
 
-    <a class="card atalho" routerLink="/destinatarios">
-      <span class="atalho-titulo">Destinatários</span>
-      <span class="atalho-desc">Cadastrar pessoas, montar listas e importar planilhas.</span>
-    </a>
+      <div class="card stat-card">
+        <span class="stat-label">Agendados</span>
+        <span class="stat-value">{{ p.disparosAgendados }}</span>
+        <span class="stat-sub">aguardando a hora</span>
+      </div>
+    </section>
 
-    <a class="card atalho" routerLink="/disparos">
-      <span class="atalho-titulo">Disparos</span>
-      <span class="atalho-desc">Enviar agora ou agendar, e acompanhar quem recebeu.</span>
-    </a>
+    @if (p.recentes.length > 0) {
+      <section class="card recentes">
+        <div class="recentes-cabecalho">
+          <h2>Disparos recentes</h2>
+          <a routerLink="/disparos">Ver todos</a>
+        </div>
 
-    @if (isAdmin()) {
-      <a class="card atalho" routerLink="/usuarios">
-        <span class="atalho-titulo">Contas</span>
-        <span class="atalho-desc">Cadastrar, desativar e reativar quem acessa o sistema.</span>
-      </a>
+        <ul>
+          @for (disparo of p.recentes; track disparo.id) {
+            <li>
+              <a class="nome" [routerLink]="['/disparos', disparo.id]">{{ disparo.nome }}</a>
+              <span class="marca" [class]="disparo.situacao.toLowerCase()">
+                {{ rotuloDaSituacao(disparo.situacao) }}
+              </span>
+              <span class="contagem">{{ disparo.enviados }}/{{ disparo.total }}</span>
+              <span class="data">{{ formatarData(disparo.agendadoPara) }}</span>
+            </li>
+          }
+        </ul>
+      </section>
     }
-  </section>
+
+    <section class="atalhos">
+      <a class="card atalho" routerLink="/modelos">
+        <span class="atalho-titulo">Modelos de e-mail</span>
+        <span class="atalho-desc">Criar modelos, versionar conteúdo e testar a renderização.</span>
+      </a>
+
+      <a class="card atalho" routerLink="/destinatarios">
+        <span class="atalho-titulo">Destinatários</span>
+        <span class="atalho-desc">Cadastrar pessoas, montar listas e importar planilhas.</span>
+      </a>
+
+      <a class="card atalho" routerLink="/disparos">
+        <span class="atalho-titulo">Disparos</span>
+        <span class="atalho-desc">Enviar agora ou agendar, e acompanhar quem recebeu.</span>
+      </a>
+
+      @if (isAdmin()) {
+        <a class="card atalho" routerLink="/usuarios">
+          <span class="atalho-titulo">Contas</span>
+          <span class="atalho-desc">Cadastrar, desativar e reativar quem acessa o sistema.</span>
+        </a>
+      }
+    </section>
+  }
 </div>
