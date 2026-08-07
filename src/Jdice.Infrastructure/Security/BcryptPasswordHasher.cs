@@ -10,6 +10,21 @@ public sealed class BcryptPasswordHasher : IPasswordHasher
 {
     private const int WorkFactor = 12;
 
+    /// <summary>
+    /// Calculado uma única vez na construção. Como esta classe é singleton, o
+    /// custo é pago no start da aplicação e não em cada login.
+    /// </summary>
+    private readonly Lazy<string> _referenceHash;
+
+    public BcryptPasswordHasher()
+    {
+        _referenceHash = new Lazy<string>(
+            () => Hash(Guid.CreateVersion7().ToString()),
+            LazyThreadSafetyMode.ExecutionAndPublication);
+    }
+
+    public string ReferenceHash => _referenceHash.Value;
+
     public string Hash(string password) =>
         BCrypt.Net.BCrypt.HashPassword(password, WorkFactor);
 

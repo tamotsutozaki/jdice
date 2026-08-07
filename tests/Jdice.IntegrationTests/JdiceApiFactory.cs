@@ -27,6 +27,13 @@ public sealed class JdiceApiFactory : WebApplicationFactory<Program>, IAsyncLife
         .WithPassword("jdice")
         .Build();
 
+    /// <summary>
+    /// Exposta para testes que precisam de um host próprio — como o do
+    /// limitador de tentativas, que liga o que todos os outros precisam
+    /// desligado — reaproveitando o mesmo container em vez de subir outro.
+    /// </summary>
+    public string ConnectionString => _postgres.GetConnectionString();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(Environments.Development);
@@ -43,7 +50,12 @@ public sealed class JdiceApiFactory : WebApplicationFactory<Program>, IAsyncLife
                 // deixaria uma conta admin surpresa em todos eles.
                 ["Database:AutoMigrate"] = "false",
                 ["Seed:AdminEmail"] = "",
-                ["Seed:AdminPassword"] = ""
+                ["Seed:AdminPassword"] = "",
+
+                // Os testes fazem muitos logins seguidos da mesma origem, o que
+                // estouraria o limite. O limitador tem teste próprio, com a
+                // fábrica configurada para exercitá-lo.
+                ["RateLimiting:Login:Enabled"] = "false"
             });
         });
     }

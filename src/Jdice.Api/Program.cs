@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
-using HealthChecks.NpgSql;
 using Jdice.Api.Auth;
 using Jdice.Api.Setup;
 using Jdice.Application;
 using Jdice.Infrastructure;
+using Jdice.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,20 +29,16 @@ builder.Services.AddExceptionHandler<BadRequestExceptionHandler>();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddJdiceAuthentication();
+builder.Services.AddLoginRateLimiter(builder.Configuration);
 
 // "live"  → o processo está de pé. Sem dependências externas.
 // "ready" → o processo consegue atender: depende do Postgres.
 // A separação existe para o healthcheck do compose não derrubar a API por
 // indisponibilidade momentânea do banco, e para o teste de integração poder
 // subir sem infraestrutura.
-var healthChecks = builder.Services.AddHealthChecks();
-
-var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres");
-
-if (!string.IsNullOrWhiteSpace(postgresConnectionString))
-{
-    healthChecks.AddNpgSql(postgresConnectionString, name: "postgres", tags: ["ready"]);
-}
+builder.Services
+    .AddHealthChecks()
+    .AddCheck<PostgresHealthCheck>("postgres", tags: ["ready"]);
 
 const string AngularCorsPolicy = "angular";
 
@@ -71,6 +67,8 @@ if (app.Environment.IsDevelopment())
 // termina TLS é o proxy na frente. Redirecionar aqui só quebraria o healthcheck.
 
 app.UseCors(AngularCorsPolicy);
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

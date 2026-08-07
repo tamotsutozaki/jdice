@@ -9,7 +9,9 @@ public sealed record LoginRequest(
 
 public sealed record CreateUserRequest(
     [property: Required, EmailAddress, MaxLength(320)] string Email,
-    [property: Required, MinLength(12), MaxLength(128)] string Senha,
+    [property: Required,
+        MinLength(PasswordPolicy.MinimumLength),
+        MaxLength(PasswordPolicy.MaximumLength)] string Senha,
     [property: Required] UserRole Role);
 
 /// <summary>

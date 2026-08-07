@@ -24,6 +24,17 @@ public class HealthEndpointsTests : IClassFixture<HealthEndpointsTests.SemBancoF
         Assert.Equal("Healthy", await response.Content.ReadAsStringAsync());
     }
 
+    [Fact]
+    public async Task Ready_acusa_indisponibilidade_quando_nao_ha_banco()
+    {
+        // Sem esta verificação, um /health/ready que não checa nada passaria
+        // por saudável e o compose declararia a API pronta sem banco.
+        var response = await _factory.CreateClient().GetAsync("/health/ready");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Equal("Unhealthy", await response.Content.ReadAsStringAsync());
+    }
+
     public sealed class SemBancoFactory : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)

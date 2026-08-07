@@ -2,24 +2,21 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <!-- Referência direta para escapar do Microsoft.OpenApi 2.0.0
+         (GHSA-v5pm-xwqc-g5wc), que vem transitivamente pelo pacote acima. -->
+    <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
+
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <!-- Referência direta para escapar do Microsoft.OpenApi 2.0.0 (GHSA-v5pm-xwqc-g5wc),
-         que vem transitivamente pelo pacote acima. -->
-    <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
-    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Jdice.Application\Jdice.Application.csproj" />
     <ProjectReference Include="..\Jdice.Infrastructure\Jdice.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="Jdice.IntegrationTests" />
   </ItemGroup>
 
 </Project>

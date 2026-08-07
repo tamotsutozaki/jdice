@@ -13,7 +13,9 @@ public static class AuthEndpoints
     {
         var group = builder.MapGroup("/api/auth").WithTags("Auth");
 
-        group.MapPost("/login", LoginAsync).AllowAnonymous();
+        group.MapPost("/login", LoginAsync)
+            .AllowAnonymous()
+            .RequireRateLimiting(LoginRateLimiting.PolicyName);
         group.MapPost("/logout", Logout).AllowAnonymous();
         group.MapGet("/me", GetCurrentUserAsync).RequireAuthorization();
 

@@ -52,11 +52,13 @@ public static class DatabaseInitializer
             return;
         }
 
-        if (seed.AdminPassword.Length < UserService.MinimumPasswordLength)
+        if (!PasswordPolicy.IsValid(seed.AdminPassword))
         {
             logger.LogError(
-                "Senha do administrador inicial tem menos de {Minimum} caracteres. Nenhuma conta foi criada.",
-                UserService.MinimumPasswordLength);
+                "Senha do administrador inicial não atende à política ({Minimum} a {Maximum} caracteres). "
+                + "Nenhuma conta foi criada.",
+                PasswordPolicy.MinimumLength,
+                PasswordPolicy.MaximumLength);
 
             return;
         }

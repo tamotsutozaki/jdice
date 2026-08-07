@@ -115,7 +115,19 @@ um problema real:
   máquina e carimbava offset `-03:00` fixo, o que dava validade errada fora de
   Brasília;
 - e-mail e senha errados devolvem a mesma resposta, e o login gasta o mesmo
-  tempo nos dois casos, para não revelar quem tem conta.
+  tempo nos dois casos, para não revelar quem tem conta;
+- o login é limitado por IP (10 tentativas por minuto, configurável em
+  `RateLimiting:Login`), porque o BCrypt é lento de propósito e tentativas sem
+  limite viram tanto força bruta quanto exaustão de CPU.
+
+A política de senha (12 a 128 caracteres) vive em `PasswordPolicy`, no domínio,
+e é aplicada tanto no contrato da API quanto no serviço — o seed cria contas
+pelo serviço, sem passar pelo contrato, e uma regra que só existisse no DTO não
+valeria para ele.
+
+Cadastros simultâneos do mesmo e-mail resultam em uma conta e conflitos: a
+checagem prévia serve para responder rápido, mas quem garante a unicidade é o
+índice do banco, cuja violação é traduzida em `409`.
 
 ## Estado
 

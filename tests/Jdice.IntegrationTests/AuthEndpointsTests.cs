@@ -35,6 +35,15 @@ public class AuthEndpointsTests(JdiceApiFactory factory) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Ready_confirma_que_a_api_alcanca_o_banco()
+    {
+        var resposta = await CriarCliente().GetAsync("/health/ready");
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+        Assert.Equal("Healthy", await resposta.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task Login_com_credencial_correta_devolve_cookie_httpOnly()
     {
         await factory.CriarUsuarioAsync("pedro@empresa.com", SenhaValida, UserRole.User);

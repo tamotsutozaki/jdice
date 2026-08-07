@@ -1,4 +1,5 @@
 using Jdice.Application.Abstractions;
+using Jdice.Application.Users;
 using Jdice.Domain.Users;
 
 namespace Jdice.UnitTests.Users;
@@ -30,6 +31,13 @@ internal sealed class FakeUserRepository : IUserRepository
 
     public Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
+        // Imita o índice único do banco: é ele, e não a checagem prévia, que
+        // de fato impede duas contas com o mesmo e-mail.
+        if (_users.Any(existente => existente.Email == user.Email))
+        {
+            throw new EmailAlreadyInUseException(user.Email);
+        }
+
         _users.Add(user);
         return Task.CompletedTask;
     }

@@ -56,6 +56,27 @@ public class UserServiceTests
             () => _userService.CreateAsync("PEDRO@EMPRESA.COM", "outra-senha-comprida", UserRole.User));
     }
 
+    [Theory]
+    [InlineData("curta")]
+    [InlineData("")]
+    public async Task Senha_fora_da_politica_e_recusada_pelo_servico(string senhaInvalida)
+    {
+        // A regra precisa valer para quem chama o serviço direto — o seed cria
+        // o administrador inicial por este caminho, sem passar pelo contrato
+        // da API.
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => _userService.CreateAsync("pedro@empresa.com", senhaInvalida, UserRole.User));
+    }
+
+    [Fact]
+    public async Task Senha_recusada_nao_cria_conta()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => _userService.CreateAsync("pedro@empresa.com", "curta", UserRole.User));
+
+        Assert.Equal(0, _users.SaveChangesCount);
+    }
+
     [Fact]
     public async Task Role_pedida_e_a_role_gravada()
     {
