@@ -8,10 +8,7 @@
         {{ ativos() === 1 ? 'ativa' : 'ativas' }}.
       </p>
     </div>
-    <div class="header-acoes">
-      <a class="principal" routerLink="/usuarios/novo">Cadastrar</a>
-      <a routerLink="/">Voltar</a>
-    </div>
+    <a class="btn btn-primary" routerLink="/usuarios/novo">Cadastrar</a>
   </header>
 
   @if (erro()) {

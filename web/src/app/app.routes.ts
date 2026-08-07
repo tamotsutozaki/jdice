@@ -9,35 +9,41 @@ export const routes: Routes = [
     loadComponent: () => import('./features/login/login').then((m) => m.Login),
   },
   {
+    // Tudo que exige sessão vive dentro do shell, que traz a barra lateral,
+    // o topo e o rodapé. O login fica de fora, ocupando a tela inteira.
     path: '',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/status/status').then((m) => m.Status),
-  },
-  {
-    path: 'modelos',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/templates/templates').then((m) => m.Templates),
-  },
-  {
-    path: 'modelos/novo',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/templates/novo-template').then((m) => m.NovoTemplate),
-  },
-  {
-    path: 'modelos/:id',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/templates/template-detalhe').then((m) => m.TemplateDetalhePagina),
-  },
-  {
-    path: 'usuarios',
-    canActivate: [adminGuard],
-    loadComponent: () => import('./features/usuarios/usuarios').then((m) => m.Usuarios),
-  },
-  {
-    path: 'usuarios/novo',
-    canActivate: [adminGuard],
-    loadComponent: () => import('./features/usuarios/novo-usuario').then((m) => m.NovoUsuario),
+    loadComponent: () => import('./layout/shell').then((m) => m.Shell),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/status/status').then((m) => m.Status),
+      },
+      {
+        path: 'modelos',
+        loadComponent: () => import('./features/templates/templates').then((m) => m.Templates),
+      },
+      {
+        path: 'modelos/novo',
+        loadComponent: () =>
+          import('./features/templates/novo-template').then((m) => m.NovoTemplate),
+      },
+      {
+        path: 'modelos/:id',
+        loadComponent: () =>
+          import('./features/templates/template-detalhe').then((m) => m.TemplateDetalhePagina),
+      },
+      {
+        path: 'usuarios',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/usuarios/usuarios').then((m) => m.Usuarios),
+      },
+      {
+        path: 'usuarios/novo',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/usuarios/novo-usuario').then((m) => m.NovoUsuario),
+      },
+    ],
   },
   {
     path: '**',

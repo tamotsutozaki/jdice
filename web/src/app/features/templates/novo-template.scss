@@ -1,8 +1,5 @@
 .pagina {
   max-width: 72rem;
-  margin: 3rem auto;
-  padding: 0 1.5rem;
-  font-family: system-ui, sans-serif;
 }
 
 header {
@@ -21,13 +18,13 @@ header {
   p {
     margin: 0.25rem 0 0;
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--muted);
   }
 
   a {
     flex-shrink: 0;
     font-size: 0.875rem;
-    color: #2563eb;
+    color: var(--green-btn);
   }
 }
 
@@ -58,10 +55,10 @@ form {
 
     small {
       font-size: 0.75rem;
-      color: #b91c1c;
+      color: var(--danger);
 
       &.dica {
-        color: #6b7280;
+        color: var(--muted);
       }
     }
   }
@@ -70,11 +67,11 @@ form {
     padding: 0.5rem 0.625rem;
     font: inherit;
     font-size: 0.9375rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border-strong);
     border-radius: 0.5rem;
 
     &:focus {
-      outline: 2px solid #2563eb;
+      outline: 2px solid var(--green-btn);
       outline-offset: -1px;
       border-color: transparent;
     }
@@ -88,7 +85,7 @@ form {
   gap: 1rem;
   flex-wrap: wrap;
   padding-top: 0.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border);
 }
 
 .alerta {
@@ -102,13 +99,13 @@ button {
   font: inherit;
   font-weight: 500;
   color: #fff;
-  background: #2563eb;
+  background: var(--green-btn);
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
 
   &:disabled {
-    background: #93b4f4;
+    background: #8bb98b;
     cursor: not-allowed;
   }
 }
@@ -120,7 +117,7 @@ button {
   border-radius: 0.5rem;
 
   &.erro {
-    color: #b91c1c;
+    color: var(--danger);
     background: #fef2f2;
     border: 1px solid #fecaca;
   }

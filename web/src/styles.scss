@@ -1,1 +1,228 @@
-/* You can add global styles to this file, and also import other style files */
+/* Identidade visual do JDice.
+ *
+ * A paleta, as fontes e as medidas do shell vêm do projeto original — verde
+ * escuro na navegação, amarelo como cor de destaque, Sora nos títulos e Inter
+ * no texto corrido. Ficam aqui, como tokens, para que nenhuma tela precise
+ * repetir um valor de cor. */
+
+:root {
+  --green-dark: #1a4a1a;
+  --green-mid: #2d6a2d;
+  --green-btn: #3a7d3a;
+  --green-light: #eef4ee;
+
+  --yellow: #f5c518;
+  --yellow-soft: #fffbe6;
+
+  --blue-tag: #2563eb;
+  --blue-soft: #dbeafe;
+  --orange: #f97316;
+
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --danger-border: #fecaca;
+
+  --success: #166534;
+  --success-soft: #dcfce7;
+
+  --white: #ffffff;
+  --surface: #ffffff;
+  --surface-alt: #f9fafb;
+  --text: #1a1a1a;
+  --muted: #6b7280;
+  --muted-soft: #9ca3af;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  --sidebar-w: 52px;
+  --topbar-h: 52px;
+
+  --radius: 9px;
+  --radius-sm: 7px;
+  --radius-lg: 12px;
+
+  --font-title: 'Sora', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--green-light);
+}
+
+body {
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-title);
+  color: var(--text);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* ── Componentes recorrentes ──
+ * Ficam globais porque aparecem em quase toda tela; repetir a definição em
+ * cada componente faria a aparência divergir com o tempo. */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 18px;
+  font-family: var(--font-title);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--white);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-alt);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  color: #fff;
+  background: var(--green-btn);
+  border-color: var(--green-btn);
+
+  &:hover:not(:disabled) {
+    background: var(--green-mid);
+    border-color: var(--green-mid);
+  }
+
+  &:disabled {
+    background: #8bb98b;
+    border-color: #8bb98b;
+  }
+}
+
+.btn-danger {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+
+  &:hover:not(:disabled) {
+    background: #b91c1c;
+    border-color: #b91c1c;
+  }
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  > span {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  small {
+    font-size: 11.5px;
+    color: var(--danger);
+
+    &.hint {
+      color: var(--muted);
+    }
+  }
+}
+
+.input,
+.field input,
+.field select,
+.field textarea {
+  padding: 9px 11px;
+  font-size: 13.5px;
+  color: var(--text);
+  background: var(--white);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+
+  &:focus {
+    outline: 2px solid var(--green-btn);
+    outline-offset: -1px;
+    border-color: transparent;
+  }
+}
+
+.alert {
+  padding: 10px 12px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+
+  &.alert-error {
+    color: var(--danger);
+    background: var(--danger-soft);
+    border: 1px solid var(--danger-border);
+  }
+
+  &.alert-success {
+    color: var(--success);
+    background: var(--success-soft);
+    border: 1px solid #a7f3d0;
+  }
+}
+
+.tag {
+  padding: 2px 9px;
+  font-size: 11.5px;
+  color: var(--muted);
+  background: #f3f4f6;
+  border-radius: 999px;
+}
+
+.tag-blue {
+  color: var(--blue-tag);
+  background: var(--blue-soft);
+}
+
+.tag-yellow {
+  color: #854d0e;
+  background: var(--yellow-soft);
+}
+
+.tag-green {
+  color: var(--success);
+  background: var(--success-soft);
+}

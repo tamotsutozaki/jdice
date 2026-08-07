@@ -16,9 +16,14 @@ public sealed record UpdateTemplateRequest(
 
 public sealed record CreateVersionRequest([property: Required] string Html);
 
+/// <param name="Html">
+/// Conteúdo a analisar ou renderizar. Vazio é aceito de propósito: o editor
+/// consulta enquanto a pessoa escreve, e recusar o estado inicial faria a
+/// primeira requisição falhar sem que nada estivesse errado.
+/// </param>
 /// <param name="Valores">Valores de exemplo para as variáveis do modelo.</param>
 public sealed record PreviewRequest(
-    [property: Required] string Html,
+    string Html,
     IReadOnlyDictionary<string, string?>? Valores);
 
 public sealed record PreviewResponse(string? Html, IReadOnlyList<string> Erros);

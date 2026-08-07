@@ -1,17 +1,11 @@
-<main class="pagina">
-  <header>
+<div class="pagina">
+  <div class="page-head">
     <div>
       <h1>Modelos de e-mail</h1>
-      <p>
-        {{ modelos().length }}
-        {{ modelos().length === 1 ? 'modelo' : 'modelos' }}
-      </p>
+      <p>{{ modelos().length }} {{ modelos().length === 1 ? 'modelo' : 'modelos' }}</p>
     </div>
-    <div class="header-acoes">
-      <a class="principal" routerLink="/modelos/novo">Novo modelo</a>
-      <a routerLink="/">Voltar</a>
-    </div>
-  </header>
+    <a class="btn btn-primary" routerLink="/modelos/novo">Novo modelo</a>
+  </div>
 
   <form class="filtros" (ngSubmit)="carregar()">
     <input
@@ -39,15 +33,15 @@
       Mostrar arquivados
     </label>
 
-    <button type="submit">Filtrar</button>
+    <button class="btn btn-sm" type="submit">Filtrar</button>
   </form>
 
   @if (erro()) {
-    <p class="aviso erro" role="alert">{{ erro() }}</p>
+    <p class="alert alert-error" role="alert">{{ erro() }}</p>
   }
 
   @if (aviso()) {
-    <p class="aviso sucesso" role="status">{{ aviso() }}</p>
+    <p class="alert alert-success" role="status">{{ aviso() }}</p>
   }
 
   @if (carregando()) {
@@ -57,12 +51,12 @@
   } @else {
     <ul class="lista">
       @for (modelo of modelos(); track modelo.id) {
-        <li class="cartao" [class.arquivado]="modelo.arquivado">
+        <li class="card cartao" [class.arquivado]="modelo.arquivado">
           <div class="cartao-corpo">
             <div class="cartao-titulo">
               <a [routerLink]="['/modelos', modelo.id]">{{ modelo.nome }}</a>
               @if (modelo.arquivado) {
-                <span class="marca">arquivado</span>
+                <span class="tag tag-yellow">arquivado</span>
               }
             </div>
 
@@ -101,6 +95,7 @@
             <div class="cartao-acao">
               @if (modelo.arquivado) {
                 <button
+                  class="btn btn-sm"
                   type="button"
                   (click)="desarquivar(modelo)"
                   [disabled]="emAndamento() === modelo.id"
@@ -109,6 +104,7 @@
                 </button>
               } @else {
                 <button
+                  class="btn btn-sm"
                   type="button"
                   (click)="arquivar(modelo)"
                   [disabled]="emAndamento() === modelo.id"
@@ -123,8 +119,8 @@
     </ul>
   }
 
-  <footer>
+  <p class="nota-final">
     O conteúdo de um modelo nunca é alterado. Para mudar o texto, abra o modelo e crie uma nova
     versão — as anteriores continuam guardadas para explicar o que foi disparado no passado.
-  </footer>
-</main>
+  </p>
+</div>

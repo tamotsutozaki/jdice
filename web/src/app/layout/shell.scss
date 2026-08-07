@@ -1,0 +1,270 @@
+.app {
+  display: flex;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* ── Barra lateral ── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: var(--sidebar-w);
+  padding: 12px 0 16px;
+  background: var(--green-dark);
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 18px;
+  font-family: var(--font-title);
+  font-size: 12px;
+  font-weight: 800;
+  color: #1a1a1a;
+  text-decoration: none;
+  background: var(--yellow);
+  border-radius: var(--radius-sm);
+}
+
+.sidebar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: rgba(255, 255, 255, 0.45);
+  border-radius: 8px;
+  transition: all 0.18s;
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+  }
+}
+
+.sidebar-spacer {
+  flex: 1;
+}
+
+/* ── Área principal ── */
+.main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  height: var(--topbar-h);
+  padding: 0 24px;
+  background: var(--green-dark);
+  flex-shrink: 0;
+}
+
+.topbar-brand {
+  display: flex;
+  flex-direction: column;
+  margin-right: 40px;
+}
+
+.brand-name {
+  font-family: var(--font-title);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.brand-sub {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.nav-link {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.16s;
+
+  &:hover {
+    color: #fff;
+  }
+
+  &.active {
+    color: #fff;
+    border-bottom-color: var(--yellow);
+  }
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.user-info {
+  text-align: right;
+}
+
+.user-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.user-role {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-family: var(--font-title);
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a1a1a;
+  background: var(--yellow);
+  border-radius: 50%;
+}
+
+.logout-btn {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.16s,
+    border-color 0.16s;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
+}
+
+.footer {
+  padding: 14px 32px;
+  font-size: 11.5px;
+  color: var(--muted);
+  background: var(--green-light);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Tablet ── */
+@media (max-width: 64rem) {
+  .sidebar {
+    width: 48px;
+    padding: 10px 0;
+  }
+
+  .sidebar-logo {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+    margin-bottom: 14px;
+  }
+
+  .topbar {
+    padding: 0 16px;
+  }
+
+  .topbar-brand {
+    margin-right: 20px;
+  }
+
+  .nav-link {
+    padding: 6px 12px;
+    font-size: 12.5px;
+  }
+
+  .content {
+    padding: 20px;
+  }
+}
+
+/* ── Celular: a lateral vira barra inferior, como no projeto original ── */
+@media (max-width: 48rem) {
+  .app {
+    flex-direction: column-reverse;
+  }
+
+  .sidebar {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    height: 60px;
+    padding: 6px 10px;
+  }
+
+  .sidebar-logo,
+  .sidebar-spacer {
+    display: none;
+  }
+
+  .sidebar-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+  }
+
+  .topbar-nav {
+    display: none;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .content {
+    padding: 16px;
+  }
+}

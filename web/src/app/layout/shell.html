@@ -1,0 +1,70 @@
+<div class="app">
+  <aside class="sidebar">
+    <a class="sidebar-logo" routerLink="/" [title]="marca.nome">{{ marca.sigla }}</a>
+
+    @for (item of navegacao(); track item.rota) {
+      <a
+        class="sidebar-icon"
+        [routerLink]="item.rota"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: !!item.exata }"
+        [title]="item.rotulo"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          [innerHTML]="icone(item.icone)"
+        ></svg>
+      </a>
+    }
+
+    <div class="sidebar-spacer"></div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-brand">
+        <span class="brand-name">{{ marca.nome }}</span>
+        <span class="brand-sub">{{ marca.subtitulo }}</span>
+      </div>
+
+      <nav class="topbar-nav">
+        @for (item of navegacao(); track item.rota) {
+          <a
+            class="nav-link"
+            [routerLink]="item.rota"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: !!item.exata }"
+          >
+            {{ item.rotulo }}
+          </a>
+        }
+      </nav>
+
+      @if (usuario(); as u) {
+        <div class="topbar-user">
+          <div class="user-info">
+            <div class="user-name">{{ u.email }}</div>
+            <div class="user-role">{{ perfil() }}</div>
+          </div>
+          <div class="user-avatar">{{ iniciais() }}</div>
+          <button class="logout-btn" type="button" (click)="sair()" [disabled]="saindo()">
+            Sair
+          </button>
+        </div>
+      }
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+
+    <footer class="footer">{{ marca.rodape }} © 2026</footer>
+  </div>
+</div>

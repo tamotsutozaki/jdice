@@ -1,40 +1,43 @@
-<main class="status">
-  <header>
+<div class="pagina">
+  <div class="page-head">
     <div>
-      <h1>JDice</h1>
-      <p>Gerenciador de disparo de e-mails corporativos</p>
+      <h1>Dashboard</h1>
+      <p>Situação do sistema e atalhos do dia a dia.</p>
+    </div>
+  </div>
+
+  <section class="stat-grid">
+    <div class="card stat-card" [class]="live()">
+      <span class="stat-label">API</span>
+      <span class="stat-value">{{ label(live()) }}</span>
     </div>
 
-    @if (user(); as usuario) {
-      <div class="sessao">
-        <span class="email">{{ usuario.email }}</span>
-        <span class="papel" [class.admin]="isAdmin()">{{ usuario.role }}</span>
-        <button type="button" (click)="sair()" [disabled]="saindo()">Sair</button>
-      </div>
-    }
-  </header>
-
-  <nav class="acoes">
-    <a routerLink="/modelos">Modelos de e-mail</a>
-
-    @if (isAdmin()) {
-      <!-- Só para administradores: o endpoint recusa os demais, e oferecer o
-           link a quem seria barrado pelo guard é um beco sem saída. -->
-      <a routerLink="/usuarios">Gerenciar contas</a>
-    }
-  </nav>
-
-  <section class="checks">
-    <div class="check" [class]="live()">
-      <span class="name">API</span>
-      <span class="state">{{ label(live()) }}</span>
+    <div class="card stat-card" [class]="ready()">
+      <span class="stat-label">Banco de dados</span>
+      <span class="stat-value">{{ label(ready()) }}</span>
     </div>
 
-    <div class="check" [class]="ready()">
-      <span class="name">Banco de dados</span>
-      <span class="state">{{ label(ready()) }}</span>
+    <div class="card stat-card">
+      <span class="stat-label">Seu perfil</span>
+      <span class="stat-value">{{ isAdmin() ? 'Administrador' : 'Usuário' }}</span>
     </div>
   </section>
 
-  <footer>Fase 1 — autenticação. Modelos de e-mail entram na Fase 2.</footer>
-</main>
+  <section class="atalhos">
+    <a class="card atalho" routerLink="/modelos">
+      <span class="atalho-titulo">Modelos de e-mail</span>
+      <span class="atalho-desc">Criar modelos, versionar conteúdo e testar a renderização.</span>
+    </a>
+
+    @if (isAdmin()) {
+      <a class="card atalho" routerLink="/usuarios">
+        <span class="atalho-titulo">Contas</span>
+        <span class="atalho-desc">Cadastrar, desativar e reativar quem acessa o sistema.</span>
+      </a>
+    }
+  </section>
+
+  <p class="rodape-nota">
+    Destinatários entram na Fase 3, disparos na Fase 4 e agendamento na Fase 5.
+  </p>
+</div>

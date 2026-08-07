@@ -32,11 +32,11 @@ textarea {
   font-size: 0.8125rem;
   line-height: 1.6;
   resize: vertical;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
 
   &:focus {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--green-btn);
     outline-offset: -1px;
     border-color: transparent;
   }
@@ -45,7 +45,7 @@ textarea {
 .erros {
   padding: 0.75rem;
   font-size: 0.8125rem;
-  color: #b91c1c;
+  color: var(--danger);
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 0.5rem;
@@ -62,7 +62,7 @@ textarea {
   gap: 0.5rem;
   padding: 0.875rem;
   background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
 }
 
@@ -74,13 +74,13 @@ textarea {
 
 .analisando {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--muted-soft);
 }
 
 .dica {
   margin: 0;
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .variavel {
@@ -91,7 +91,7 @@ textarea {
 
   code {
     font-size: 0.8125rem;
-    color: #1d4ed8;
+    color: var(--green-mid);
     overflow-wrap: anywhere;
   }
 
@@ -99,7 +99,7 @@ textarea {
     padding: 0.375rem 0.5rem;
     font: inherit;
     font-size: 0.8125rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border-strong);
     border-radius: 0.375rem;
     min-width: 0;
   }
@@ -109,7 +109,7 @@ textarea {
   width: 100%;
   min-height: 24rem;
   background: #fff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
 }
 
@@ -120,6 +120,6 @@ textarea {
   padding: 1rem;
   font-size: 0.875rem;
   text-align: center;
-  color: #9ca3af;
+  color: var(--muted-soft);
   background: #f9fafb;
 }

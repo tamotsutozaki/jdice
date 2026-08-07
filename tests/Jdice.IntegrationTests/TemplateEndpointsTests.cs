@@ -284,6 +284,56 @@ public class TemplateEndpointsTests(JdiceApiFactory factory) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Analisar_conteudo_vazio_devolve_lista_vazia_e_nao_erro()
+    {
+        var client = await LogarAsync("comum@empresa.com", UserRole.User);
+
+        // O editor consulta enquanto a pessoa escreve, e a primeira consulta
+        // acontece com o campo ainda em branco. Recusar isso com 400 fazia a
+        // tela inteira parar de analisar depois da primeira requisição.
+        var resposta = await client.PostAsJsonAsync(
+            "/api/templates/analyze",
+            new { html = "", valores = new Dictionary<string, string>() });
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+
+        var analise = await resposta.Content.ReadFromJsonAsync<Analise>();
+        Assert.Empty(analise!.Variaveis);
+        Assert.Empty(analise.Erros);
+    }
+
+    [Fact]
+    public async Task Preview_de_conteudo_vazio_nao_e_erro()
+    {
+        var client = await LogarAsync("comum@empresa.com", UserRole.User);
+
+        var resposta = await client.PostAsJsonAsync(
+            "/api/templates/preview",
+            new { html = "", valores = new Dictionary<string, string>() });
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+    }
+
+    [Fact]
+    public async Task Analisar_encontra_variavel_dentro_de_condicional_e_ignora_item_de_laco()
+    {
+        var client = await LogarAsync("comum@empresa.com", UserRole.User);
+
+        var resposta = await client.PostAsJsonAsync("/api/templates/analyze", new
+        {
+            html = "{{ if vip }}Olá {{ nome }}{{ end }}"
+                + "{{ for item in produtos }}<li>{{ item }}</li>{{ end }}",
+            valores = new Dictionary<string, string>()
+        });
+
+        var analise = await resposta.Content.ReadFromJsonAsync<Analise>();
+
+        // É o caminho que a interface usa para listar o que precisa ser
+        // preenchido: "vip" e "produtos" vêm de fora, "item" é da iteração.
+        Assert.Equal(["vip", "nome", "produtos"], analise!.Variaveis);
+    }
+
+    [Fact]
     public async Task Visitante_nao_acessa_modelos()
     {
         var client = factory.CreateClient();
@@ -313,4 +363,6 @@ public class TemplateEndpointsTests(JdiceApiFactory factory) : IAsyncLifetime
         bool Arquivado);
 
     private sealed record Preview(string? Html, IReadOnlyList<string> Erros);
+
+    private sealed record Analise(IReadOnlyList<string> Variaveis, IReadOnlyList<string> Erros);
 }

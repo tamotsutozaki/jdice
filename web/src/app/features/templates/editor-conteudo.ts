@@ -1,10 +1,14 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 
-import { TemplatesService } from '../../core/templates/templates.service';
+import {
+  ResultadoDeAnalise,
+  ResultadoDePreview,
+  TemplatesService,
+} from '../../core/templates/templates.service';
 
 /**
  * Editor de conteúdo com preview ao lado. As variáveis são descobertas pelo
@@ -50,41 +54,60 @@ export class EditorConteudo {
       .pipe(
         debounceTime(400),
         distinctUntilChanged(),
+        // O catchError fica DENTRO do switchMap de propósito. Tratado só no
+        // subscribe, um único erro encerraria este observable e o editor
+        // pararia de analisar para sempre — foi o que aconteceu quando a
+        // análise do conteúdo vazio voltou 400 na montagem do componente.
         switchMap((conteudo) => {
+          if (!conteudo.trim()) {
+            return of<ResultadoDeAnalise>({ variaveis: [], erros: [] });
+          }
+
           this.analisando.set(true);
-          return this.templates.analisar(conteudo);
+
+          return this.templates.analisar(conteudo).pipe(
+            catchError(() =>
+              of<ResultadoDeAnalise>({
+                variaveis: [],
+                erros: ['Não foi possível verificar o conteúdo agora.'],
+              }),
+            ),
+          );
         }),
         takeUntilDestroyed(),
       )
-      .subscribe({
-        next: (analise) => {
-          this.analisando.set(false);
-          this.variaveis.set(analise.variaveis);
-          this.erros.set(analise.erros);
-          this.validoMudou.emit(analise.erros.length === 0 && this.html().trim().length > 0);
-          this.limparValoresOrfaos(analise.variaveis);
-          this.pedidoDePreview.next();
-        },
-        error: () => this.analisando.set(false),
+      .subscribe((analise) => {
+        this.analisando.set(false);
+        this.variaveis.set(analise.variaveis);
+        this.erros.set(analise.erros);
+        this.validoMudou.emit(analise.erros.length === 0 && this.html().trim().length > 0);
+        this.limparValoresOrfaos(analise.variaveis);
+        this.pedidoDePreview.next();
       });
 
     this.pedidoDePreview
       .pipe(
         debounceTime(200),
-        switchMap(() => this.templates.preview(this.html(), this.valores())),
+        switchMap(() => {
+          if (!this.html().trim()) {
+            return of<ResultadoDePreview>({ html: null, erros: [] });
+          }
+
+          return this.templates
+            .preview(this.html(), this.valores())
+            .pipe(catchError(() => of<ResultadoDePreview>({ html: null, erros: [] })));
+        }),
         takeUntilDestroyed(),
       )
-      .subscribe({
-        next: (resultado) => {
-          this.previewHtml.set(
-            resultado.html === null
-              ? null
-              : // O preview vai para um iframe isolado e sem permissão de
-                // script; sem o bypass, o Angular removeria os estilos que
-                // fazem um e-mail parecer o que ele é.
-                this.sanitizer.bypassSecurityTrustHtml(resultado.html),
-          );
-        },
+      .subscribe((resultado) => {
+        this.previewHtml.set(
+          resultado.html === null
+            ? null
+            : // O preview vai para um iframe isolado e sem permissão de
+              // script; sem o bypass, o Angular removeria os estilos que
+              // fazem um e-mail parecer o que ele é.
+              this.sanitizer.bypassSecurityTrustHtml(resultado.html),
+        );
       });
   }
 
@@ -103,11 +126,15 @@ export class EditorConteudo {
   }
 
   private analisar(conteudo: string): void {
-    this.templates.analisar(conteudo).subscribe((analise) => {
-      this.variaveis.set(analise.variaveis);
-      this.erros.set(analise.erros);
-      this.pedidoDePreview.next();
-    });
+    this.templates
+      .analisar(conteudo)
+      .pipe(catchError(() => of<ResultadoDeAnalise>({ variaveis: [], erros: [] })))
+      .subscribe((analise) => {
+        this.variaveis.set(analise.variaveis);
+        this.erros.set(analise.erros);
+        this.validoMudou.emit(analise.erros.length === 0 && conteudo.trim().length > 0);
+        this.pedidoDePreview.next();
+      });
   }
 
   /** Variável que sumiu do conteúdo não deve continuar ocupando o formulário. */
