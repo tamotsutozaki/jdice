@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Jdice.Api.Auth;
+using Jdice.Api.Campaigns;
 using Jdice.Api.Recipients;
 using Jdice.Api.Setup;
 using Jdice.Api.Templates;
@@ -30,6 +31,11 @@ builder.Services.AddExceptionHandler<BadRequestExceptionHandler>();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Cliente do Hangfire, sem servidor: a API agenda e cancela, mas não executa
+// disparo nenhum. Quem processa é o Jdice.Worker, em container próprio.
+builder.Services.AddJobScheduling(builder.Configuration);
+
 builder.Services.AddJdiceAuthentication();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 
@@ -88,6 +94,7 @@ app.MapHealthChecks("/health/ready", new()
 app.MapAuthEndpoints();
 app.MapTemplateEndpoints();
 app.MapRecipientEndpoints();
+app.MapCampaignEndpoints();
 
 // Desligável para que o teste de integração controle quando o banco é
 // preparado — e para que, na Fase 4, o worker não dispute a aplicação das

@@ -4,6 +4,7 @@
     <Project Path="src/Jdice.Application/Jdice.Application.csproj" />
     <Project Path="src/Jdice.Domain/Jdice.Domain.csproj" />
     <Project Path="src/Jdice.Infrastructure/Jdice.Infrastructure.csproj" />
+    <Project Path="src/Jdice.Worker/Jdice.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Jdice.IntegrationTests/Jdice.IntegrationTests.csproj" />

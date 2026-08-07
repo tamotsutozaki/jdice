@@ -1,6 +1,10 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using Jdice.Application.Abstractions;
+using Jdice.Infrastructure.Email;
 using Jdice.Infrastructure.Persistence;
 using Jdice.Infrastructure.Recipients;
+using Jdice.Infrastructure.Scheduling;
 using Jdice.Infrastructure.Security;
 using Jdice.Infrastructure.Templates;
 using Microsoft.EntityFrameworkCore;
@@ -22,10 +26,14 @@ public static class DependencyInjection
         services.AddScoped<ITemplateRepository, TemplateRepository>();
         services.AddScoped<IRecipientRepository, RecipientRepository>();
         services.AddScoped<IRecipientListRepository, RecipientListRepository>();
+        services.AddScoped<ICampaignRepository, CampaignRepository>();
+
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddSingleton<ITemplateRenderer, ScribanTemplateRenderer>();
         services.AddSingleton<ICsvRecipientReader, CsvRecipientReader>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<ICampaignScheduler, HangfireCampaignScheduler>();
 
         services.AddOptions<JwtOptions>()
             .Bind(configuration.GetSection(JwtOptions.SectionName))
@@ -34,6 +42,29 @@ public static class DependencyInjection
             // fraco é erro de configuração, e erro de configuração tem que
             // aparecer no deploy.
             .ValidateOnStart();
+
+        services.AddOptions<SmtpOptions>()
+            .Bind(configuration.GetSection(SmtpOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registra o Hangfire apenas como cliente: permite agendar e cancelar,
+    /// mas não executa nada. É o que a API usa — quem processa é o worker.
+    /// </summary>
+    public static IServiceCollection AddJobScheduling(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(options =>
+                options.UseNpgsqlConnection(configuration.GetConnectionString("Postgres"))));
 
         return services;
     }

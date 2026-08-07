@@ -1,3 +1,4 @@
+using Jdice.Domain.Campaigns;
 using Jdice.Domain.Recipients;
 using Jdice.Domain.Templates;
 using Jdice.Domain.Users;
@@ -14,6 +15,10 @@ public sealed class JdiceDbContext(DbContextOptions<JdiceDbContext> options) : D
     public DbSet<Recipient> Recipients => Set<Recipient>();
 
     public DbSet<RecipientList> RecipientLists => Set<RecipientList>();
+
+    public DbSet<Campaign> Campaigns => Set<Campaign>();
+
+    public DbSet<Delivery> Deliveries => Set<Delivery>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

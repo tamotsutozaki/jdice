@@ -21,6 +21,23 @@ services:
       retries: 10
       start_period: 10s
 
+  # Servidor SMTP de captura para desenvolvimento: aceita as mensagens e as
+  # mostra numa interface web, sem entregar a ninguém. Permite validar o envio
+  # de ponta a ponta sem risco de mandar e-mail para pessoas reais.
+  mailpit:
+    image: axllent/mailpit:v1.21
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build:
       context: .
@@ -39,6 +56,11 @@ services:
       # Administrador inicial, criado apenas se o banco não tiver nenhuma conta.
       Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-}
       Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:-}
+
+      Smtp__Host: ${SMTP_HOST:-mailpit}
+      Smtp__Port: ${SMTP_PORT:-1025}
+      Smtp__FromEmail: ${SMTP_FROM_EMAIL:-nao-responda@jdice.local}
+      Smtp__FromName: ${SMTP_FROM_NAME:-JDice}
     ports:
       - "${API_PORT:-5080}:8080"
     depends_on:
@@ -50,6 +72,31 @@ services:
       timeout: 3s
       retries: 5
       start_period: 15s
+
+  # Processa os disparos. Separado da API para poder escalar sozinho:
+  #   docker compose up --scale worker=3
+  worker:
+    build:
+      context: .
+      dockerfile: src/Jdice.Worker/Dockerfile
+    environment:
+      DOTNET_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-jdice};Username=${POSTGRES_USER:-jdice};Password=${POSTGRES_PASSWORD:-jdice}"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?defina JWT_SIGNING_KEY no .env (minimo 32 bytes)}
+      Smtp__Host: ${SMTP_HOST:-mailpit}
+      Smtp__Port: ${SMTP_PORT:-1025}
+      Smtp__FromEmail: ${SMTP_FROM_EMAIL:-nao-responda@jdice.local}
+      Smtp__FromName: ${SMTP_FROM_NAME:-JDice}
+      Hangfire__WorkerCount: ${WORKER_COUNT:-4}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+      # Espera a API porque é ela que aplica as migrations; o worker apenas
+      # aguarda as tabelas existirem.
+      api:
+        condition: service_started
 
   web:
     build:

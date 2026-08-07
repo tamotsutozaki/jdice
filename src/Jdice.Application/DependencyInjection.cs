@@ -1,3 +1,4 @@
+using Jdice.Application.Campaigns;
 using Jdice.Application.Recipients;
 using Jdice.Application.Templates;
 using Jdice.Application.Users;
@@ -15,6 +16,8 @@ public static class DependencyInjection
         services.AddScoped<TemplateService>();
         services.AddScoped<RecipientService>();
         services.AddScoped<RecipientListService>();
+        services.AddScoped<CampaignService>();
+        services.AddScoped<CampaignProcessor>();
 
         return services;
     }
