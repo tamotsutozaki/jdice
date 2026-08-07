@@ -38,6 +38,22 @@ services:
       timeout: 3s
       retries: 10
 
+  # Reparte as entregas de um disparo entre os workers. O Hangfire decide
+  # quando o disparo sai; a fila decide quantos processam ao mesmo tempo.
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-jdice}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-jdice}
+    ports:
+      - "${RABBITMQ_UI_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   api:
     build:
       context: .
@@ -61,6 +77,11 @@ services:
       Smtp__Port: ${SMTP_PORT:-1025}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-nao-responda@jdice.local}
       Smtp__FromName: ${SMTP_FROM_NAME:-JDice}
+
+      RabbitMq__Enabled: ${RABBITMQ_ENABLED:-true}
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_USER:-jdice}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-jdice}
     ports:
       - "${API_PORT:-5080}:8080"
     depends_on:
@@ -88,11 +109,19 @@ services:
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-nao-responda@jdice.local}
       Smtp__FromName: ${SMTP_FROM_NAME:-JDice}
       Hangfire__WorkerCount: ${WORKER_COUNT:-4}
+
+      RabbitMq__Enabled: ${RABBITMQ_ENABLED:-true}
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: ${RABBITMQ_USER:-jdice}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-jdice}
+      RabbitMq__Prefetch: ${RABBITMQ_PREFETCH:-10}
     depends_on:
       postgres:
         condition: service_healthy
       mailpit:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
       # Espera a API porque é ela que aplica as migrations; o worker apenas
       # aguarda as tabelas existirem.
       api:

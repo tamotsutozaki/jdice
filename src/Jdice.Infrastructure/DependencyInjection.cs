@@ -2,6 +2,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Jdice.Application.Abstractions;
 using Jdice.Infrastructure.Email;
+using Jdice.Infrastructure.Messaging;
 using Jdice.Infrastructure.Persistence;
 using Jdice.Infrastructure.Recipients;
 using Jdice.Infrastructure.Scheduling;
@@ -47,6 +48,23 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(SmtpOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
+        services.Configure<RabbitMqOptions>(configuration.GetSection(RabbitMqOptions.SectionName));
+
+        var filaLigada = configuration.GetValue($"{RabbitMqOptions.SectionName}:Enabled", false);
+
+        services.AddSingleton<RabbitMqConnection>();
+
+        // Sem a fila, o disparo roda em série dentro do job — suficiente para
+        // volumes pequenos e sem depender de mais uma peça de infraestrutura.
+        if (filaLigada)
+        {
+            services.AddSingleton<IDeliveryQueue, RabbitMqDeliveryQueue>();
+        }
+        else
+        {
+            services.AddSingleton<IDeliveryQueue, NoDeliveryQueue>();
+        }
 
         return services;
     }

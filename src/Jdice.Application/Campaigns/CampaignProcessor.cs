@@ -21,6 +21,7 @@ public sealed class CampaignProcessor(
     ITemplateRepository templates,
     ITemplateRenderer renderer,
     IEmailSender emailSender,
+    IDeliveryQueue queue,
     TimeProvider clock,
     ILogger<CampaignProcessor> logger)
 {
@@ -87,9 +88,24 @@ public sealed class CampaignProcessor(
             return;
         }
 
+        if (queue.IsEnabled)
+        {
+            // Com a fila ligada, este job só reparte o trabalho: cada entrega
+            // vira uma mensagem e os workers consomem em paralelo. Sem ela,
+            // acrescentar workers não adiantaria nada, porque um disparo
+            // inteiro seria um job só percorrendo tudo em série.
+            await RepartirNaFilaAsync(campaignId, cancellationToken);
+            return;
+        }
+
         while (!cancellationToken.IsCancellationRequested)
         {
-            var lote = await campaigns.NextPendingAsync(campaignId, TamanhoDoLote, cancellationToken);
+            // Aqui não precisa de cursor: processar muda a situação da
+            // entrega, então a consulta seguinte traz as próximas.
+            var lote = await campaigns.NextPendingAsync(
+                campaignId,
+                TamanhoDoLote,
+                cancellationToken: cancellationToken);
 
             if (lote.Count == 0)
             {
@@ -115,6 +131,87 @@ public sealed class CampaignProcessor(
                 resumo.Enviados,
                 resumo.Falhados,
                 resumo.Pulados);
+        }
+    }
+
+    /// <summary>Coloca cada entrega pendente na fila, em lotes.</summary>
+    private async Task RepartirNaFilaAsync(Guid campaignId, CancellationToken cancellationToken)
+    {
+        var publicadas = 0;
+        Guid? cursor = null;
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            // Percorre por cursor, e não repetindo a mesma consulta: publicar
+            // não muda a situação da entrega, então buscar "as primeiras
+            // pendentes" traria sempre o mesmo lote e o resto nunca sairia.
+            var lote = await campaigns.NextPendingAsync(
+                campaignId,
+                TamanhoDoLote,
+                cursor,
+                cancellationToken);
+
+            if (lote.Count == 0)
+            {
+                break;
+            }
+
+            await queue.PublishAsync(
+                [.. lote.Select(entrega => new DeliveryWork(campaignId, entrega.Id))],
+                cancellationToken);
+
+            publicadas += lote.Count;
+            cursor = lote[^1].Id;
+        }
+
+        logger.LogInformation(
+            "Disparo {Id}: {Total} entregas repartidas entre os workers.",
+            campaignId,
+            publicadas);
+    }
+
+    /// <summary>
+    /// Processa uma entrega avulsa, vinda da fila. Recarrega a campanha porque
+    /// o consumidor não tem o contexto de quem repartiu.
+    /// </summary>
+    public async Task ProcessDeliveryAsync(
+        Guid campaignId,
+        Guid deliveryId,
+        CancellationToken cancellationToken = default)
+    {
+        var campaign = await campaigns.FindHeaderAsync(campaignId, cancellationToken);
+
+        if (campaign is null || campaign.Status is CampaignStatus.Cancelled)
+        {
+            return;
+        }
+
+        var entrega = await campaigns.FindDeliveryAsync(deliveryId, cancellationToken);
+
+        if (entrega is null)
+        {
+            return;
+        }
+
+        var versao = await CarregarVersaoAsync(campaign, cancellationToken);
+
+        if (versao is null)
+        {
+            entrega.Skip("A versão do modelo não existe mais.");
+            await campaigns.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        await ProcessarEntregaAsync(campaign, versao.Html, entrega, cancellationToken);
+
+        // Quem processa a última entrega fecha o disparo. Com vários workers,
+        // não há um "coordenador" para fazer isso no fim.
+        var resumo = await campaigns.SummaryAsync(campaignId, cancellationToken);
+
+        if (resumo.Terminou && campaign.Status is CampaignStatus.Running)
+        {
+            campaign.Complete(clock.GetUtcNow());
+            await campaigns.SaveChangesAsync(cancellationToken);
         }
     }
 

@@ -68,13 +68,23 @@ public sealed class CampaignRepository(JdiceDbContext context) : ICampaignReposi
     public async Task<IReadOnlyList<Delivery>> NextPendingAsync(
         Guid campaignId,
         int quantidade,
-        CancellationToken cancellationToken = default) =>
-        await context.Deliveries
+        Guid? depoisDe = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = context.Deliveries
             .Where(delivery =>
-                delivery.CampaignId == campaignId && delivery.Status == DeliveryStatus.Pending)
+                delivery.CampaignId == campaignId && delivery.Status == DeliveryStatus.Pending);
+
+        if (depoisDe is { } cursor)
+        {
+            query = query.Where(delivery => delivery.Id > cursor);
+        }
+
+        return await query
             .OrderBy(delivery => delivery.Id)
             .Take(quantidade)
             .ToListAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<Delivery>> ListDeliveriesAsync(
         Guid campaignId,
@@ -85,6 +95,13 @@ public sealed class CampaignRepository(JdiceDbContext context) : ICampaignReposi
             .OrderBy(delivery => delivery.Email)
             .Take(limite)
             .ToListAsync(cancellationToken);
+
+    public Task<Delivery?> FindDeliveryAsync(
+        Guid deliveryId,
+        CancellationToken cancellationToken = default) =>
+        context.Deliveries.SingleOrDefaultAsync(
+            delivery => delivery.Id == deliveryId,
+            cancellationToken);
 
     public Task AddAsync(Campaign campaign, CancellationToken cancellationToken = default)
     {

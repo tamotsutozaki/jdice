@@ -28,6 +28,10 @@ builder.Services.AddHangfireServer(options =>
 // existirem — inclusive as do próprio Hangfire.
 builder.Services.AddHostedService<AguardarBancoPronto>();
 
+// Consome as entregas repartidas na fila. Fica ocioso quando o RabbitMQ está
+// desligado, e nesse caso o disparo roda em série dentro do próprio job.
+builder.Services.AddHostedService<ConsumidorDeEntregas>();
+
 var host = builder.Build();
 
 await host.RunAsync();

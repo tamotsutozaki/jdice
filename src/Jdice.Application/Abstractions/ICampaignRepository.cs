@@ -34,16 +34,27 @@ public interface ICampaignRepository
 
     Task<DeliverySummary> SummaryAsync(Guid campaignId, CancellationToken cancellationToken = default);
 
-    /// <summary>Entregas ainda por processar, em lotes, para não carregar milhares de uma vez.</summary>
+    /// <summary>
+    /// Entregas ainda por processar, em lotes, para não carregar milhares de
+    /// uma vez.
+    /// </summary>
+    /// <param name="depoisDe">
+    /// Cursor para percorrer o lote inteiro. Sem ele, quem só publica as
+    /// entregas numa fila — sem mudar a situação delas — receberia sempre as
+    /// mesmas primeiras e nunca chegaria ao fim da lista.
+    /// </param>
     Task<IReadOnlyList<Delivery>> NextPendingAsync(
         Guid campaignId,
         int quantidade,
+        Guid? depoisDe = null,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Delivery>> ListDeliveriesAsync(
         Guid campaignId,
         int limite,
         CancellationToken cancellationToken = default);
+
+    Task<Delivery?> FindDeliveryAsync(Guid deliveryId, CancellationToken cancellationToken = default);
 
     Task AddAsync(Campaign campaign, CancellationToken cancellationToken = default);
 
