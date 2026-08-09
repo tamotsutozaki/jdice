@@ -63,12 +63,4 @@ export class ImportarDestinatarios {
       },
     });
   }
-
-  protected nomeDoArquivo(): string {
-    return this.arquivo()?.name ?? '';
-  }
-
-  protected nomeDaListaEscolhida(): string {
-    return this.listas().find((lista) => lista.id === this.listaId())?.nome ?? '';
-  }
 }

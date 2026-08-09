@@ -104,11 +104,6 @@ export class RecipientsService {
     return this.http.put<Destinatario>(`/api/recipients/${id}`, dados);
   }
 
-  /** Em quais listas o destinatário já está — usado para não reoferecer as mesmas. */
-  listasDe(destinatarioId: string): Observable<ListaDeDestinatarios[]> {
-    return this.http.get<ListaDeDestinatarios[]>(`/api/recipients/${destinatarioId}/lists`);
-  }
-
   /** Coloca um destinatário existente numa lista. É idempotente no backend. */
   adicionarNaLista(listaId: string, destinatarioId: string): Observable<void> {
     return this.http.post<void>(`/api/recipient-lists/${listaId}/members/${destinatarioId}`, {});
