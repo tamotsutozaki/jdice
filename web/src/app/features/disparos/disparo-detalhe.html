@@ -111,9 +111,16 @@
           <option value="Sent">Entregues</option>
           <option value="Failed">Falharam</option>
           <option value="Skipped">Não enviados</option>
+          <option value="Sending">Enviando</option>
           <option value="Pending">Na fila</option>
         </select>
       </div>
+
+      @if (entregasTruncadas()) {
+        <p class="nota">
+          Mostrando os primeiros {{ limiteDeEntregas }} de {{ d.resumo.total }} destinatários.
+        </p>
+      }
 
       @if (entregasFiltradas().length === 0) {
         <p class="nota">Nenhum destinatário nesta situação.</p>

@@ -40,13 +40,17 @@
       </div>
     </section>
 
-    @if (p.recentes.length > 0) {
-      <section class="card recentes">
-        <div class="recentes-cabecalho">
-          <h2>Disparos recentes</h2>
-          <a routerLink="/disparos">Ver todos</a>
-        </div>
+    <section class="card recentes">
+      <div class="recentes-cabecalho">
+        <h2>Disparos recentes</h2>
+        <a routerLink="/disparos">Ver todos</a>
+      </div>
 
+      @if (p.recentes.length === 0) {
+        <p class="recentes-vazio">
+          Nenhum disparo ainda. <a routerLink="/disparos/novo">Criar o primeiro</a>.
+        </p>
+      } @else {
         <ul>
           @for (disparo of p.recentes; track disparo.id) {
             <li>
@@ -59,8 +63,8 @@
             </li>
           }
         </ul>
-      </section>
-    }
+      }
+    </section>
 
     <section class="atalhos">
       <a class="card atalho" routerLink="/modelos">

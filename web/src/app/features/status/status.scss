@@ -84,6 +84,17 @@
   }
 }
 
+.recentes-vazio {
+  margin: 6px 0 2px;
+  font-size: 13px;
+  color: var(--muted);
+
+  a {
+    color: var(--green-btn);
+    text-decoration: none;
+  }
+}
+
 .recentes-cabecalho {
   display: flex;
   align-items: baseline;

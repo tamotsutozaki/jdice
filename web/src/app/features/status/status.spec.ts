@@ -85,6 +85,20 @@ describe('Status', () => {
     expect(texto(fixture)).toContain('Concluído');
   });
 
+  it('convida a criar o primeiro disparo quando não há recentes', () => {
+    configurar();
+
+    const fixture = TestBed.createComponent(Status);
+    fixture.detectChanges();
+
+    httpMock.expectOne('/api/dashboard').flush({ ...painel, recentes: [] });
+    fixture.detectChanges();
+
+    // Antes a seção sumia calada; agora aponta o caminho.
+    expect(texto(fixture)).toContain('Nenhum disparo ainda');
+    expect(texto(fixture)).toContain('Criar o primeiro');
+  });
+
   it('esconde o atalho de contas de quem não é administrador', () => {
     configurar('User');
     const fixture = montar();

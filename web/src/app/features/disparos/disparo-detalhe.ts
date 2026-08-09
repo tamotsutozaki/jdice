@@ -1,9 +1,15 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { CampaignsService, Disparo, Entrega } from '../../core/campaigns/campaigns.service';
+
+/** Teto de entregas que o backend devolve numa consulta (GET .../deliveries). */
+const LIMITE_DE_ENTREGAS = 200;
+
+/** De quanto em quanto tempo a tela se atualiza sozinha enquanto o disparo corre. */
+const INTERVALO_DE_ATUALIZACAO = 4000;
 
 @Component({
   selector: 'app-disparo-detalhe',
@@ -13,6 +19,7 @@ import { CampaignsService, Disparo, Entrega } from '../../core/campaigns/campaig
 })
 export class DisparoDetalhe {
   private readonly campaigns = inject(CampaignsService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly id = input.required<string>();
 
@@ -23,6 +30,15 @@ export class DisparoDetalhe {
   protected readonly aviso = signal('');
   protected readonly emAndamento = signal(false);
   protected readonly confirmandoCancelamento = signal(false);
+
+  // A consulta de entregas tem teto; quando o disparo tem mais que isso, a tela
+  // avisa que está mostrando só uma parte, em vez de fingir que são todas.
+  protected readonly limiteDeEntregas = LIMITE_DE_ENTREGAS;
+
+  protected readonly entregasTruncadas = computed(() => {
+    const total = this.disparo()?.resumo.total ?? 0;
+    return this.entregas().length < total;
+  });
 
   protected readonly remarcando = signal(false);
   protected readonly data = signal('');
@@ -54,10 +70,24 @@ export class DisparoDetalhe {
 
   constructor() {
     queueMicrotask(() => this.carregar());
+
+    // Enquanto o worker processa, a tela se atualiza sozinha: sem isso, o número
+    // ficava congelado e só mexia ao clicar em "Atualizar", dando a impressão de
+    // que o disparo tinha travado. O refresh é silencioso, para não piscar
+    // "Carregando..." a cada ciclo.
+    const timer = setInterval(() => {
+      if (this.disparo()?.situacao === 'Running') {
+        this.carregar(true);
+      }
+    }, INTERVALO_DE_ATUALIZACAO);
+
+    this.destroyRef.onDestroy(() => clearInterval(timer));
   }
 
-  protected carregar(): void {
-    this.carregando.set(true);
+  protected carregar(silencioso = false): void {
+    if (!silencioso) {
+      this.carregando.set(true);
+    }
     this.erro.set('');
 
     this.campaigns.obter(this.id()).subscribe({
@@ -73,6 +103,9 @@ export class DisparoDetalhe {
 
     this.campaigns.entregas(this.id()).subscribe({
       next: (entregas) => this.entregas.set(entregas),
+      // Uma falha só nas entregas não pode derrubar a tela toda: o resumo acima
+      // ainda vale. A lista fica vazia e o resto continua.
+      error: () => this.entregas.set([]),
     });
   }
 

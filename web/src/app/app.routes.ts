@@ -81,10 +81,13 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         loadComponent: () => import('./features/usuarios/novo-usuario').then((m) => m.NovoUsuario),
       },
+      {
+        // Endereço desconhecido dentro da área logada: mostra o 404 dentro do
+        // shell, em vez de redirecionar em silêncio para o painel.
+        path: '**',
+        loadComponent: () =>
+          import('./features/nao-encontrado/nao-encontrado').then((m) => m.NaoEncontrado),
+      },
     ],
-  },
-  {
-    path: '**',
-    redirectTo: '',
   },
 ];
