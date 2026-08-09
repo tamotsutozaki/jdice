@@ -18,6 +18,7 @@ public static class TemplateEndpoints
 
         group.MapGet("/", ListAsync);
         group.MapGet("/categories", ListCategoriesAsync);
+        group.MapGet("/tags", ListTagsAsync);
         group.MapGet("/{id:guid}", GetAsync);
 
         // Criar modelo e criar versão são o trabalho diário e ficam abertos a
@@ -61,6 +62,11 @@ public static class TemplateEndpoints
         TemplateService templates,
         CancellationToken cancellationToken) =>
         TypedResults.Ok(await templates.ListCategoriesAsync(cancellationToken));
+
+    private static async Task<Ok<IReadOnlyList<string>>> ListTagsAsync(
+        TemplateService templates,
+        CancellationToken cancellationToken) =>
+        TypedResults.Ok(await templates.ListTagsAsync(cancellationToken));
 
     private static async Task<Results<Ok<TemplateDetailResponse>, NotFound<ProblemDetails>>> GetAsync(
         Guid id,

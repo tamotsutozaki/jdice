@@ -1,6 +1,41 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { Observable } from 'rxjs';
+
+/** Espelham os limites do domínio (Template.cs), para a UI avisar antes do 400. */
+export const LIMITES_TEMPLATE = {
+  maxNome: 120,
+  maxCategoria: 60,
+  maxTag: 40,
+  maxTags: 10,
+} as const;
+
+/** Quebra o campo de texto em tags limpas, do mesmo jeito que o envio faz. */
+export function separarTags(texto: string): string[] {
+  return texto
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Recusa mais de 10 tags ou uma tag longa demais antes de bater no backend —
+ * o servidor rejeitaria com 400, mas o aviso local evita a ida perdida.
+ */
+export function tagsValidas(control: AbstractControl): ValidationErrors | null {
+  const tags = separarTags(control.value ?? '');
+
+  if (tags.length > LIMITES_TEMPLATE.maxTags) {
+    return { tagsDemais: LIMITES_TEMPLATE.maxTags };
+  }
+
+  if (tags.some((tag) => tag.length > LIMITES_TEMPLATE.maxTag)) {
+    return { tagLonga: LIMITES_TEMPLATE.maxTag };
+  }
+
+  return null;
+}
 
 export interface TemplateVersao {
   id: string;
@@ -77,6 +112,10 @@ export class TemplatesService {
 
   categorias(): Observable<string[]> {
     return this.http.get<string[]>('/api/templates/categories');
+  }
+
+  tags(): Observable<string[]> {
+    return this.http.get<string[]>('/api/templates/tags');
   }
 
   obter(id: string): Observable<TemplateDetalhe> {

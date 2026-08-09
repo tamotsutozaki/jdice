@@ -57,6 +57,8 @@ describe('TemplateDetalhePagina', () => {
     await fixture.whenStable();
 
     httpMock.expectOne('/api/templates/id-modelo').flush(dados);
+    httpMock.expectOne('/api/templates/categories').flush(['Onboarding']);
+    httpMock.expectOne('/api/templates/tags').flush(['novo']);
     fixture.detectChanges();
 
     return fixture;

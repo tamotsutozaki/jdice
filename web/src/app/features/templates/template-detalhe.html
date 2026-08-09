@@ -38,15 +38,46 @@
         <div class="dados">
           <label>
             <span>Nome</span>
-            <input type="text" [ngModel]="nome()" (ngModelChange)="nome.set($event)" />
+            <input
+              type="text"
+              [ngModel]="nome()"
+              (ngModelChange)="nome.set($event)"
+              [attr.maxlength]="limites.maxNome"
+            />
           </label>
           <label>
             <span>Categoria</span>
-            <input type="text" [ngModel]="categoria()" (ngModelChange)="categoria.set($event)" />
+            <input
+              type="text"
+              [ngModel]="categoria()"
+              (ngModelChange)="categoria.set($event)"
+              list="categorias-existentes"
+              [attr.maxlength]="limites.maxCategoria"
+            />
+            <datalist id="categorias-existentes">
+              @for (item of categorias(); track item) {
+                <option [value]="item"></option>
+              }
+            </datalist>
           </label>
           <label>
             <span>Tags</span>
-            <input type="text" [ngModel]="tags()" (ngModelChange)="tags.set($event)" />
+            <input
+              type="text"
+              [ngModel]="tags()"
+              (ngModelChange)="tags.set($event)"
+              list="tags-existentes"
+            />
+            <datalist id="tags-existentes">
+              @for (item of tagsUsadas(); track item) {
+                <option [value]="item"></option>
+              }
+            </datalist>
+            @if (erroTags()) {
+              <small class="erro-campo">{{ erroTags() }}</small>
+            } @else {
+              <small class="dica">Separe por vírgula.</small>
+            }
           </label>
         </div>
         <div class="acoes">
@@ -54,7 +85,7 @@
             type="button"
             class="primario"
             (click)="salvarDados()"
-            [disabled]="salvandoDados()"
+            [disabled]="salvandoDados() || !!erroTags() || !nome().trim()"
           >
             {{ salvandoDados() ? 'Salvando...' : 'Salvar' }}
           </button>

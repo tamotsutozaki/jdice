@@ -3,7 +3,12 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import { TemplateDetalhe, TemplatesService } from '../../core/templates/templates.service';
+import {
+  LIMITES_TEMPLATE,
+  separarTags,
+  TemplateDetalhe,
+  TemplatesService,
+} from '../../core/templates/templates.service';
 import { EditorConteudo } from './editor-conteudo';
 
 @Component({
@@ -35,11 +40,33 @@ export class TemplateDetalhePagina {
   protected readonly tags = signal('');
   protected readonly salvandoDados = signal(false);
 
+  protected readonly limites = LIMITES_TEMPLATE;
+  protected readonly categorias = signal<string[]>([]);
+  protected readonly tagsUsadas = signal<string[]>([]);
+
   protected readonly versaoAtual = computed(() => this.modelo()?.versoes[0] ?? null);
+
+  // Mesma regra do backend, avisada enquanto se digita: mais de 10 tags ou uma
+  // tag longa demais seria recusada no salvamento.
+  protected readonly erroTags = computed(() => {
+    const tags = separarTags(this.tags());
+
+    if (tags.length > LIMITES_TEMPLATE.maxTags) {
+      return `No máximo ${LIMITES_TEMPLATE.maxTags} tags.`;
+    }
+
+    if (tags.some((tag) => tag.length > LIMITES_TEMPLATE.maxTag)) {
+      return `Cada tag deve ter até ${LIMITES_TEMPLATE.maxTag} caracteres.`;
+    }
+
+    return '';
+  });
 
   constructor() {
     // O id vem da rota e não muda enquanto a tela está aberta.
     queueMicrotask(() => this.carregar());
+    this.templates.categorias().subscribe((categorias) => this.categorias.set(categorias));
+    this.templates.tags().subscribe((tags) => this.tagsUsadas.set(tags));
   }
 
   protected carregar(): void {
@@ -104,7 +131,7 @@ export class TemplateDetalhePagina {
   }
 
   protected salvarDados(): void {
-    if (this.salvandoDados()) {
+    if (this.salvandoDados() || this.erroTags() || !this.nome().trim()) {
       return;
     }
 
@@ -115,10 +142,7 @@ export class TemplateDetalhePagina {
       .atualizarDados(this.id(), {
         nome: this.nome(),
         categoria: this.categoria(),
-        tags: this.tags()
-          .split(',')
-          .map((tag) => tag.trim())
-          .filter(Boolean),
+        tags: separarTags(this.tags()),
       })
       .subscribe({
         next: (modelo) => {

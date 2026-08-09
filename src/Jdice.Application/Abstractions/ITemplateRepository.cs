@@ -29,6 +29,9 @@ public interface ITemplateRepository
     /// <summary>Categorias já usadas, para alimentar sugestões na interface.</summary>
     Task<IReadOnlyList<string>> ListCategoriesAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>Tags já usadas, para o filtro e as sugestões da interface.</summary>
+    Task<IReadOnlyList<string>> ListTagsAsync(CancellationToken cancellationToken = default);
+
     Task AddAsync(Template template, CancellationToken cancellationToken = default);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

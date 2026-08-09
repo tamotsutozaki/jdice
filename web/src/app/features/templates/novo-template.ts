@@ -3,7 +3,12 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
-import { TemplatesService } from '../../core/templates/templates.service';
+import {
+  LIMITES_TEMPLATE,
+  separarTags,
+  tagsValidas,
+  TemplatesService,
+} from '../../core/templates/templates.service';
 import { EditorConteudo } from './editor-conteudo';
 
 @Component({
@@ -17,16 +22,26 @@ export class NovoTemplate {
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
 
+  protected readonly limites = LIMITES_TEMPLATE;
+
   protected readonly html = signal('');
   protected readonly conteudoValido = signal(false);
   protected readonly enviando = signal(false);
   protected readonly erro = signal('');
 
+  protected readonly categorias = signal<string[]>([]);
+  protected readonly tagsUsadas = signal<string[]>([]);
+
   protected readonly form = this.formBuilder.nonNullable.group({
-    nome: ['', [Validators.required, Validators.maxLength(120)]],
-    categoria: ['', [Validators.maxLength(60)]],
-    tags: [''],
+    nome: ['', [Validators.required, Validators.maxLength(LIMITES_TEMPLATE.maxNome)]],
+    categoria: ['', [Validators.maxLength(LIMITES_TEMPLATE.maxCategoria)]],
+    tags: ['', [tagsValidas]],
   });
+
+  constructor() {
+    this.templates.categorias().subscribe((categorias) => this.categorias.set(categorias));
+    this.templates.tags().subscribe((tags) => this.tagsUsadas.set(tags));
+  }
 
   protected criar(): void {
     if (this.form.invalid || !this.conteudoValido() || this.enviando()) {
@@ -43,10 +58,7 @@ export class NovoTemplate {
       .criar({
         nome,
         categoria,
-        tags: tags
-          .split(',')
-          .map((tag) => tag.trim())
-          .filter(Boolean),
+        tags: separarTags(tags),
         html: this.html(),
       })
       .subscribe({

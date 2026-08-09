@@ -248,6 +248,21 @@ public class TemplateEndpointsTests(JdiceApiFactory factory) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Tags_lista_as_usadas_sem_repetir_e_em_ordem()
+    {
+        var client = await LogarAsync("comum@empresa.com", UserRole.User);
+
+        await client.PostAsJsonAsync("/api/templates", NovoModelo(nome: "A", tags: ["promo", "vip"]));
+        await client.PostAsJsonAsync("/api/templates", NovoModelo(nome: "B", tags: ["aviso", "promo"]));
+
+        var tags = await client.GetFromJsonAsync<List<string>>("/api/templates/tags");
+
+        // O filtro por tag precisa de uma fonte de tags; sem repetir "promo" e
+        // em ordem, para virar um seletor previsível na interface.
+        Assert.Equal(["aviso", "promo", "vip"], tags);
+    }
+
+    [Fact]
     public async Task Preview_renderiza_com_os_valores_informados()
     {
         var client = await LogarAsync("comum@empresa.com", UserRole.User);

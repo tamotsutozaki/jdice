@@ -23,6 +23,10 @@ public sealed class TemplateService(
         CancellationToken cancellationToken = default) =>
         templates.ListCategoriesAsync(cancellationToken);
 
+    public Task<IReadOnlyList<string>> ListTagsAsync(
+        CancellationToken cancellationToken = default) =>
+        templates.ListTagsAsync(cancellationToken);
+
     public async Task<Template> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         await templates.FindByIdAsync(id, cancellationToken)
         ?? throw new TemplateNotFoundException(id);

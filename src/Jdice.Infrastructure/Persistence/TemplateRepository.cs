@@ -70,6 +70,16 @@ public sealed class TemplateRepository(JdiceDbContext context) : ITemplateReposi
             .OrderBy(categoria => categoria)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<string>> ListTagsAsync(
+        CancellationToken cancellationToken = default) =>
+        // SelectMany sobre a coluna text[] vira um unnest no Postgres: uma
+        // consulta só, sem trazer os modelos para desmontar as tags em memória.
+        await context.Templates
+            .SelectMany(template => template.Tags)
+            .Distinct()
+            .OrderBy(tag => tag)
+            .ToListAsync(cancellationToken);
+
     public Task AddAsync(Template template, CancellationToken cancellationToken = default)
     {
         context.Templates.Add(template);

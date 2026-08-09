@@ -15,21 +15,53 @@
     <div class="dados">
       <label>
         <span>Nome</span>
-        <input type="text" formControlName="nome" placeholder="Boas-vindas" />
+        <input
+          type="text"
+          formControlName="nome"
+          placeholder="Boas-vindas"
+          [attr.maxlength]="limites.maxNome"
+        />
         @if (form.controls.nome.touched && form.controls.nome.invalid) {
-          <small>Informe um nome de até 120 caracteres.</small>
+          <small>Informe um nome de até {{ limites.maxNome }} caracteres.</small>
         }
       </label>
 
       <label>
         <span>Categoria</span>
-        <input type="text" formControlName="categoria" placeholder="Onboarding" />
+        <input
+          type="text"
+          formControlName="categoria"
+          placeholder="Onboarding"
+          list="categorias-existentes"
+          [attr.maxlength]="limites.maxCategoria"
+        />
+        <datalist id="categorias-existentes">
+          @for (item of categorias(); track item) {
+            <option [value]="item"></option>
+          }
+        </datalist>
       </label>
 
       <label>
         <span>Tags</span>
-        <input type="text" formControlName="tags" placeholder="novo, cliente" />
-        <small class="dica">Separe por vírgula.</small>
+        <input
+          type="text"
+          formControlName="tags"
+          placeholder="novo, cliente"
+          list="tags-existentes"
+        />
+        <datalist id="tags-existentes">
+          @for (item of tagsUsadas(); track item) {
+            <option [value]="item"></option>
+          }
+        </datalist>
+        @if (form.controls.tags.errors?.['tagsDemais']) {
+          <small class="erro-campo">No máximo {{ limites.maxTags }} tags.</small>
+        } @else if (form.controls.tags.errors?.['tagLonga']) {
+          <small class="erro-campo">Cada tag deve ter até {{ limites.maxTag }} caracteres.</small>
+        } @else {
+          <small class="dica">Separe por vírgula.</small>
+        }
       </label>
     </div>
 
@@ -42,7 +74,7 @@
       <p class="alerta">
         Depois de salvo, este conteúdo fica congelado. Ajustes futuros criam uma nova versão.
       </p>
-      <button type="submit" [disabled]="enviando() || !conteudoValido()">
+      <button type="submit" [disabled]="enviando() || !conteudoValido() || form.invalid">
         {{ enviando() ? 'Salvando...' : 'Salvar modelo' }}
       </button>
     </div>

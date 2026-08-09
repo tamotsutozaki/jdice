@@ -23,6 +23,15 @@
       }
     </select>
 
+    @if (tags().length > 0) {
+      <select [ngModel]="tag()" (ngModelChange)="tag.set($event)" name="tag">
+        <option value="">Todas as tags</option>
+        @for (item of tags(); track item) {
+          <option [value]="item">{{ item }}</option>
+        }
+      </select>
+    }
+
     <label class="arquivados">
       <input
         type="checkbox"

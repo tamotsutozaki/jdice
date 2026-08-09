@@ -17,6 +17,7 @@ export class Templates {
 
   protected readonly modelos = signal<TemplateDaLista[]>([]);
   protected readonly categorias = signal<string[]>([]);
+  protected readonly tags = signal<string[]>([]);
   protected readonly carregando = signal(true);
   protected readonly erro = signal('');
   protected readonly aviso = signal('');
@@ -24,6 +25,7 @@ export class Templates {
 
   protected readonly busca = signal('');
   protected readonly categoria = signal('');
+  protected readonly tag = signal('');
   protected readonly incluirArquivados = signal(false);
 
   protected readonly isAdmin = this.auth.isAdmin;
@@ -31,6 +33,7 @@ export class Templates {
   constructor() {
     this.carregar();
     this.templates.categorias().subscribe((categorias) => this.categorias.set(categorias));
+    this.templates.tags().subscribe((tags) => this.tags.set(tags));
   }
 
   protected carregar(): void {
@@ -41,6 +44,7 @@ export class Templates {
       .listar({
         busca: this.busca(),
         categoria: this.categoria(),
+        tag: this.tag(),
         incluirArquivados: this.incluirArquivados(),
       })
       .subscribe({

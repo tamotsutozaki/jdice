@@ -118,6 +118,15 @@ header {
     border: 1px solid var(--border-strong);
     border-radius: 0.5rem;
   }
+
+  small {
+    font-size: 0.75rem;
+    color: var(--muted);
+
+    &.erro-campo {
+      color: var(--danger);
+    }
+  }
 }
 
 .acoes {

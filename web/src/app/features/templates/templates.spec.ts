@@ -63,6 +63,7 @@ describe('Templates', () => {
 
     httpMock.expectOne((r) => r.url === '/api/templates').flush(itens);
     httpMock.expectOne('/api/templates/categories').flush(['Onboarding', 'Marketing']);
+    httpMock.expectOne('/api/templates/tags').flush(['novo', 'cliente']);
     fixture.detectChanges();
 
     return fixture;
@@ -82,6 +83,19 @@ describe('Templates', () => {
     expect(texto(fixture)).toContain('3 versões');
     expect(texto(fixture)).toContain('atual: v3');
     expect(texto(fixture)).toContain('nome');
+  });
+
+  it('oferece filtrar por tag quando há tags cadastradas', () => {
+    configurar('User');
+    const fixture = montar();
+
+    const opcoes = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('select[name="tag"] option'),
+    ).map((o) => o.textContent?.trim());
+
+    expect(opcoes).toContain('Todas as tags');
+    expect(opcoes).toContain('novo');
+    expect(opcoes).toContain('cliente');
   });
 
   it('avisa que o conteúdo não é editável', () => {
@@ -163,6 +177,7 @@ describe('Templates', () => {
       .expectOne((r) => r.url === '/api/templates')
       .flush(null, { status: 500, statusText: 'Server Error' });
     httpMock.expectOne('/api/templates/categories').flush([]);
+    httpMock.expectOne('/api/templates/tags').flush([]);
 
     await fixture.whenStable();
     fixture.detectChanges();
