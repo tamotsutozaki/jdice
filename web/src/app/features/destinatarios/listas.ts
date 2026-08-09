@@ -28,6 +28,12 @@ export class ListasDeDestinatarios {
   protected readonly descricao = signal('');
   protected readonly salvando = signal(false);
 
+  // Edição inline de uma lista existente: id em edição e os campos do momento.
+  protected readonly editando = signal<string | null>(null);
+  protected readonly editNome = signal('');
+  protected readonly editDescricao = signal('');
+  protected readonly salvandoEdicao = signal(false);
+
   protected readonly isAdmin = this.auth.isAdmin;
 
   constructor() {
@@ -76,6 +82,42 @@ export class ListasDeDestinatarios {
         );
       },
     });
+  }
+
+  protected abrirEdicao(lista: ListaDeDestinatarios): void {
+    this.editando.set(lista.id);
+    this.editNome.set(lista.nome);
+    this.editDescricao.set(lista.descricao);
+    this.erro.set('');
+    this.aviso.set('');
+  }
+
+  protected salvarEdicao(lista: ListaDeDestinatarios): void {
+    if (!this.editNome().trim() || this.salvandoEdicao()) {
+      return;
+    }
+
+    this.salvandoEdicao.set(true);
+    this.erro.set('');
+
+    this.recipients
+      .atualizarLista(lista.id, { nome: this.editNome(), descricao: this.editDescricao() })
+      .subscribe({
+        next: () => {
+          this.salvandoEdicao.set(false);
+          this.editando.set(null);
+          this.aviso.set('Lista atualizada.');
+          this.carregar();
+        },
+        error: (erro: HttpErrorResponse) => {
+          this.salvandoEdicao.set(false);
+          this.erro.set(
+            erro.status === 409
+              ? 'Já existe uma lista com esse nome.'
+              : 'Não foi possível salvar a lista.',
+          );
+        },
+      });
   }
 
   protected remover(lista: ListaDeDestinatarios): void {

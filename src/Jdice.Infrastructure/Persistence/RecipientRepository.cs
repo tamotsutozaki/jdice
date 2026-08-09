@@ -179,6 +179,27 @@ public sealed class RecipientListRepository(JdiceDbContext context) : IRecipient
             .Include(lista => lista.Members)
             .SingleOrDefaultAsync(lista => lista.Id == id, cancellationToken);
 
+    public async Task<(int TotalDeMembros, int TotalAtivos)> CountMembersAsync(
+        Guid listaId,
+        CancellationToken cancellationToken = default)
+    {
+        // Ativo = membro cujo destinatário não se descadastrou. Contar sobre
+        // Members.Count trataria descadastrados como ativos, inflando o número
+        // que decide o tamanho de um disparo.
+        var contagem = await context.Set<RecipientListMember>()
+            .Where(membro => membro.RecipientListId == listaId)
+            .GroupBy(_ => 1)
+            .Select(grupo => new
+            {
+                Total = grupo.Count(),
+                Ativos = grupo.Count(membro => context.Recipients.Any(recipient =>
+                    recipient.Id == membro.RecipientId && recipient.UnsubscribedAt == null))
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return contagem is null ? (0, 0) : (contagem.Total, contagem.Ativos);
+    }
+
     public Task<bool> NameExistsAsync(
         string name,
         Guid? exceptId = null,

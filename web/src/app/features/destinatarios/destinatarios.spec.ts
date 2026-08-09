@@ -53,7 +53,19 @@ describe('Destinatarios', () => {
     httpMock = TestBed.inject(HttpTestingController);
   }
 
-  function montar(itens: Destinatario[] = pessoas, total = itens.length) {
+  const listasFake = [
+    {
+      id: 'lista-1',
+      nome: 'Clientes',
+      descricao: '',
+      totalDeMembros: 3,
+      totalAtivos: 3,
+      criadoEm: '2026-08-01T12:00:00Z',
+      atualizadoEm: '2026-08-01T12:00:00Z',
+    },
+  ];
+
+  function montar(itens: Destinatario[] = pessoas, total = itens.length, listas: unknown[] = []) {
     const fixture = TestBed.createComponent(Destinatarios);
     fixture.detectChanges();
 
@@ -66,7 +78,7 @@ describe('Destinatarios', () => {
         tamanhoDaPagina: 25,
         totalDePaginas: Math.ceil(total / 25),
       });
-    httpMock.expectOne('/api/recipient-lists').flush([]);
+    httpMock.expectOne('/api/recipient-lists').flush(listas);
     fixture.detectChanges();
 
     return fixture;
@@ -152,6 +164,54 @@ describe('Destinatarios', () => {
     const fixture = montar(pessoas, 60);
 
     expect(texto(fixture)).toContain('Página 1 de 3');
+  });
+
+  it('oferece adicionar à lista quando há listas e um botão de editar', () => {
+    configurar();
+    const fixture = montar(pessoas, pessoas.length, listasFake);
+
+    const rotulos = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button, a'),
+    ).map((el) => el.textContent?.trim());
+
+    expect(rotulos).toContain('Adicionar à lista');
+    expect(rotulos).toContain('Editar');
+  });
+
+  it('adiciona um destinatário existente a uma lista escolhida', async () => {
+    configurar();
+    const fixture = montar(pessoas, pessoas.length, listasFake);
+
+    const abrir = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((b) => b.textContent?.includes('Adicionar à lista')) as HTMLButtonElement;
+    abrir.click();
+    fixture.detectChanges();
+
+    const select = (fixture.nativeElement as HTMLElement).querySelector(
+      'select[name="listaEscolhida"]',
+    ) as HTMLSelectElement;
+    select.value = select.options[1].value;
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    const confirmar = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.add-lista button'),
+    ).find((b) => b.textContent?.includes('Adicionar')) as HTMLButtonElement;
+    confirmar.click();
+
+    httpMock
+      .expectOne({ method: 'POST', url: '/api/recipient-lists/lista-1/members/id-ana' })
+      .flush(null);
+
+    httpMock
+      .expectOne((r) => r.url === '/api/recipients')
+      .flush({ itens: pessoas, total: 2, pagina: 1, tamanhoDaPagina: 25, totalDePaginas: 1 });
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(texto(fixture)).toContain('foi adicionado a Clientes');
   });
 
   it('avisa quando não consegue carregar', async () => {

@@ -35,6 +35,11 @@ export class Destinatarios {
   protected readonly listaId = signal('');
   protected readonly incluirDescadastrados = signal(false);
 
+  // Seletor inline de "adicionar à lista": guarda o destinatário aberto e a
+  // lista escolhida no momento.
+  protected readonly adicionandoNaLista = signal<string | null>(null);
+  protected readonly listaEscolhida = signal('');
+
   protected readonly isAdmin = this.auth.isAdmin;
 
   protected readonly listaAtual = computed(() =>
@@ -89,6 +94,30 @@ export class Destinatarios {
   protected remover(destinatario: Destinatario): void {
     this.executar(destinatario.id, this.recipients.remover(destinatario.id), () =>
       this.aviso.set(`${destinatario.email} foi removido do sistema.`),
+    );
+  }
+
+  protected abrirAdicionarNaLista(destinatario: Destinatario): void {
+    this.adicionandoNaLista.set(destinatario.id);
+    this.listaEscolhida.set('');
+    this.erro.set('');
+    this.aviso.set('');
+  }
+
+  protected confirmarAdicionarNaLista(destinatario: Destinatario): void {
+    const listaId = this.listaEscolhida();
+    const lista = this.listas().find((item) => item.id === listaId);
+
+    if (!lista) {
+      return;
+    }
+
+    this.adicionandoNaLista.set(null);
+
+    this.executar(
+      destinatario.id,
+      this.recipients.adicionarNaLista(lista.id, destinatario.id),
+      () => this.aviso.set(`${destinatario.email} foi adicionado a ${lista.nome}.`),
     );
   }
 

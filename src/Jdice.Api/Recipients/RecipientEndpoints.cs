@@ -268,8 +268,9 @@ public static class RecipientEndpoints
         try
         {
             var lista = await listas.GetAsync(id, cancellationToken);
+            var (total, ativos) = await listas.CountMembersAsync(id, cancellationToken);
 
-            return TypedResults.Ok(ParaLista(lista, lista.Members.Count, lista.Members.Count));
+            return TypedResults.Ok(ParaLista(lista, total, ativos));
         }
         catch (RecipientListNotFoundException excecao)
         {
@@ -320,8 +321,9 @@ public static class RecipientEndpoints
         try
         {
             var lista = await listas.UpdateAsync(id, request.Nome, request.Descricao, cancellationToken);
+            var (total, ativos) = await listas.CountMembersAsync(id, cancellationToken);
 
-            return TypedResults.Ok(ParaLista(lista, lista.Members.Count, lista.Members.Count));
+            return TypedResults.Ok(ParaLista(lista, total, ativos));
         }
         catch (RecipientListNotFoundException excecao)
         {

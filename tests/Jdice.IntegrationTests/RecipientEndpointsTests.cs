@@ -322,6 +322,93 @@ public class RecipientEndpointsTests(JdiceApiFactory factory) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Detalhe_da_lista_nao_conta_descadastrado_como_ativo()
+    {
+        var client = await LogarAsync();
+        var listaId = await CriarListaAsync(client);
+
+        await client.PostAsync($"/api/recipients/import?listaId={listaId}", ArquivoCsv("""
+            email;nome
+            ana@empresa.com;Ana
+            bruno@empresa.com;Bruno
+            """));
+
+        var pagina = await client.GetFromJsonAsync<PaginaResponse>($"/api/recipients?listaId={listaId}");
+        var ana = pagina!.Itens.First(item => item.Email == "ana@empresa.com");
+        await client.PostAsync($"/api/recipients/{ana.Id}/unsubscribe", null);
+
+        // O endpoint de uma lista só usava Members.Count para os dois números,
+        // então descadastrado contava como ativo. Aqui: 2 membros, 1 ativo.
+        var lista = await client.GetFromJsonAsync<ListaResponse>($"/api/recipient-lists/{listaId}");
+
+        Assert.Equal(2, lista!.TotalDeMembros);
+        Assert.Equal(1, lista.TotalAtivos);
+    }
+
+    [Fact]
+    public async Task Adiciona_destinatario_existente_a_uma_lista()
+    {
+        var client = await LogarAsync();
+        var listaId = await CriarListaAsync(client);
+
+        // Cadastrado sem lista — o caso em que se cria o contato antes da lista.
+        var criado = await client.PostAsJsonAsync("/api/recipients", new { email = "ana@empresa.com" });
+        var ana = await criado.Content.ReadFromJsonAsync<RecipienteResponse>();
+
+        var resposta = await client.PostAsync(
+            $"/api/recipient-lists/{listaId}/members/{ana!.Id}",
+            null);
+
+        Assert.Equal(HttpStatusCode.NoContent, resposta.StatusCode);
+
+        var naLista = await client.GetFromJsonAsync<PaginaResponse>(
+            $"/api/recipients?listaId={listaId}");
+        Assert.Equal(1, naLista!.Total);
+    }
+
+    [Fact]
+    public async Task Edita_nome_e_campos_de_destinatario_existente()
+    {
+        var client = await LogarAsync();
+
+        var criado = await client.PostAsJsonAsync("/api/recipients", new
+        {
+            email = "ana@empresa.com",
+            nome = "Ana",
+            campos = new Dictionary<string, string> { ["empresa"] = "Acme" }
+        });
+        var ana = await criado.Content.ReadFromJsonAsync<RecipienteResponse>();
+
+        var resposta = await client.PutAsJsonAsync($"/api/recipients/{ana!.Id}", new
+        {
+            nome = "Ana Souza",
+            campos = new Dictionary<string, string> { ["empresa"] = "Acme", ["plano"] = "Premium" }
+        });
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+
+        var atualizado = await resposta.Content.ReadFromJsonAsync<RecipienteResponse>();
+        Assert.Equal("Ana Souza", atualizado!.Nome);
+        Assert.Equal("Premium", atualizado.Campos["plano"]);
+    }
+
+    [Fact]
+    public async Task Renomeia_lista_existente()
+    {
+        var client = await LogarAsync();
+        var listaId = await CriarListaAsync(client, "Antigo");
+
+        var resposta = await client.PutAsJsonAsync(
+            $"/api/recipient-lists/{listaId}",
+            new { nome = "Novo nome", descricao = "Agora com descrição" });
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+
+        var lista = await resposta.Content.ReadFromJsonAsync<ListaResponse>();
+        Assert.Equal("Novo nome", lista!.Nome);
+    }
+
+    [Fact]
     public async Task Usuario_comum_nao_remove_destinatario()
     {
         var admin = await LogarAsync("admin@empresa.com", UserRole.Admin);

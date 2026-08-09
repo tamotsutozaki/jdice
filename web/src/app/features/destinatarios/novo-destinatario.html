@@ -23,7 +23,12 @@
 
       <label class="field">
         <span>Nome</span>
-        <input type="text" formControlName="nome" placeholder="Ana Souza" />
+        <input
+          type="text"
+          formControlName="nome"
+          placeholder="Ana Souza"
+          [attr.maxlength]="limites.maxNome"
+        />
       </label>
 
       <label class="field">
@@ -40,7 +45,14 @@
     <div class="campos-livres">
       <div class="campos-cabecalho">
         <span class="titulo">Campos personalizados</span>
-        <button class="btn btn-sm" type="button" (click)="adicionarCampo()">Adicionar campo</button>
+        <button
+          class="btn btn-sm"
+          type="button"
+          (click)="adicionarCampo()"
+          [disabled]="campos().length >= limites.maxCampos"
+        >
+          Adicionar campo
+        </button>
       </div>
 
       @if (campos().length === 0) {
@@ -53,17 +65,23 @@
             <input
               type="text"
               placeholder="nome do campo"
+              [attr.maxlength]="limites.maxNomeCampo"
               [value]="campo.nome"
               (input)="definirCampo($index, 'nome', $any($event.target).value)"
             />
             <input
               type="text"
               placeholder="valor"
+              [attr.maxlength]="limites.maxValorCampo"
               [value]="campo.valor"
               (input)="definirCampo($index, 'valor', $any($event.target).value)"
             />
             <button class="btn btn-sm" type="button" (click)="removerCampo($index)">Remover</button>
           </div>
+        }
+
+        @if (campos().length >= limites.maxCampos) {
+          <p class="hint">Limite de {{ limites.maxCampos }} campos atingido.</p>
         }
       }
     </div>

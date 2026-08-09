@@ -61,44 +61,90 @@
     <ul class="lista">
       @for (lista of listas(); track lista.id) {
         <li class="card cartao">
-          <div class="cartao-corpo">
-            <a class="nome" [routerLink]="['/destinatarios']" [queryParams]="{ lista: lista.id }">
-              {{ lista.nome }}
-            </a>
-            @if (lista.descricao) {
-              <p class="descricao">{{ lista.descricao }}</p>
-            }
-            <div class="meta">
-              <span>
-                {{ lista.totalDeMembros }}
-                {{ lista.totalDeMembros === 1 ? 'pessoa' : 'pessoas' }}
-              </span>
-              @if (lista.totalDeMembros !== lista.totalAtivos) {
-                <span class="inativos">
-                  {{ lista.totalAtivos }} ainda {{ lista.totalAtivos === 1 ? 'recebe' : 'recebem' }}
-                </span>
-              }
-            </div>
-          </div>
-
-          @if (isAdmin()) {
-            <div class="cartao-acao">
-              @if (confirmando() === lista.id) {
-                <button class="btn btn-sm btn-danger" type="button" (click)="remover(lista)">
-                  Confirmar
+          @if (editando() === lista.id) {
+            <div class="cartao-corpo editando">
+              <label class="field">
+                <span>Nome</span>
+                <input
+                  type="text"
+                  [ngModel]="editNome()"
+                  (ngModelChange)="editNome.set($event)"
+                  placeholder="Nome da lista"
+                />
+              </label>
+              <label class="field">
+                <span>Descrição</span>
+                <input
+                  type="text"
+                  [ngModel]="editDescricao()"
+                  (ngModelChange)="editDescricao.set($event)"
+                  placeholder="Descrição (opcional)"
+                />
+              </label>
+              <div class="acoes">
+                <button
+                  class="btn btn-sm btn-primary"
+                  type="button"
+                  (click)="salvarEdicao(lista)"
+                  [disabled]="salvandoEdicao() || !editNome().trim()"
+                >
+                  {{ salvandoEdicao() ? 'Salvando...' : 'Salvar' }}
                 </button>
-                <button class="btn btn-sm" type="button" (click)="confirmando.set(null)">
+                <button class="btn btn-sm" type="button" (click)="editando.set(null)">
                   Cancelar
                 </button>
-              } @else {
-                <button
-                  class="btn btn-sm"
-                  type="button"
-                  (click)="confirmando.set(lista.id)"
-                  [disabled]="emAndamento() === lista.id"
-                >
-                  Apagar
-                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="cartao-corpo">
+              <a class="nome" [routerLink]="['/destinatarios']" [queryParams]="{ lista: lista.id }">
+                {{ lista.nome }}
+              </a>
+              @if (lista.descricao) {
+                <p class="descricao">{{ lista.descricao }}</p>
+              }
+              <div class="meta">
+                <span>
+                  {{ lista.totalDeMembros }}
+                  {{ lista.totalDeMembros === 1 ? 'pessoa' : 'pessoas' }}
+                </span>
+                @if (lista.totalDeMembros !== lista.totalAtivos) {
+                  <span class="inativos">
+                    {{ lista.totalAtivos }} ainda
+                    {{ lista.totalAtivos === 1 ? 'recebe' : 'recebem' }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <div class="cartao-acao">
+              <button
+                class="btn btn-sm"
+                type="button"
+                (click)="abrirEdicao(lista)"
+                [disabled]="emAndamento() === lista.id"
+              >
+                Editar
+              </button>
+
+              @if (isAdmin()) {
+                @if (confirmando() === lista.id) {
+                  <button class="btn btn-sm btn-danger" type="button" (click)="remover(lista)">
+                    Confirmar
+                  </button>
+                  <button class="btn btn-sm" type="button" (click)="confirmando.set(null)">
+                    Cancelar
+                  </button>
+                } @else {
+                  <button
+                    class="btn btn-sm"
+                    type="button"
+                    (click)="confirmando.set(lista.id)"
+                    [disabled]="emAndamento() === lista.id"
+                  >
+                    Apagar
+                  </button>
+                }
               }
             </div>
           }

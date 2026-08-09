@@ -98,46 +98,88 @@
                 }
               </td>
               <td class="acoes">
-                @if (pessoa.inscrito) {
-                  <button
-                    class="btn btn-sm"
-                    type="button"
-                    (click)="descadastrar(pessoa)"
-                    [disabled]="emAndamento() === pessoa.id"
-                  >
-                    Descadastrar
-                  </button>
+                @if (adicionandoNaLista() === pessoa.id) {
+                  <div class="add-lista">
+                    <select
+                      [ngModel]="listaEscolhida()"
+                      (ngModelChange)="listaEscolhida.set($event)"
+                      name="listaEscolhida"
+                      aria-label="Escolher lista"
+                    >
+                      <option value="">Escolha a lista...</option>
+                      @for (lista of listas(); track lista.id) {
+                        <option [value]="lista.id">{{ lista.nome }}</option>
+                      }
+                    </select>
+                    <button
+                      class="btn btn-sm btn-primary"
+                      type="button"
+                      [disabled]="!listaEscolhida()"
+                      (click)="confirmarAdicionarNaLista(pessoa)"
+                    >
+                      Adicionar
+                    </button>
+                    <button class="btn btn-sm" type="button" (click)="adicionandoNaLista.set(null)">
+                      Cancelar
+                    </button>
+                  </div>
                 } @else {
-                  <button
-                    class="btn btn-sm"
-                    type="button"
-                    (click)="readmitir(pessoa)"
-                    [disabled]="emAndamento() === pessoa.id"
-                  >
-                    Readmitir
-                  </button>
-                }
+                  <a class="btn btn-sm" [routerLink]="['/destinatarios', pessoa.id, 'editar']">
+                    Editar
+                  </a>
 
-                @if (listaAtual()) {
-                  <button
-                    class="btn btn-sm"
-                    type="button"
-                    (click)="tirarDaLista(pessoa)"
-                    [disabled]="emAndamento() === pessoa.id"
-                  >
-                    Tirar da lista
-                  </button>
-                }
+                  @if (pessoa.inscrito) {
+                    <button
+                      class="btn btn-sm"
+                      type="button"
+                      (click)="descadastrar(pessoa)"
+                      [disabled]="emAndamento() === pessoa.id"
+                    >
+                      Descadastrar
+                    </button>
+                  } @else {
+                    <button
+                      class="btn btn-sm"
+                      type="button"
+                      (click)="readmitir(pessoa)"
+                      [disabled]="emAndamento() === pessoa.id"
+                    >
+                      Readmitir
+                    </button>
+                  }
 
-                @if (isAdmin()) {
-                  <button
-                    class="btn btn-sm"
-                    type="button"
-                    (click)="remover(pessoa)"
-                    [disabled]="emAndamento() === pessoa.id"
-                  >
-                    Remover
-                  </button>
+                  @if (listas().length > 0) {
+                    <button
+                      class="btn btn-sm"
+                      type="button"
+                      (click)="abrirAdicionarNaLista(pessoa)"
+                      [disabled]="emAndamento() === pessoa.id"
+                    >
+                      Adicionar à lista
+                    </button>
+                  }
+
+                  @if (listaAtual()) {
+                    <button
+                      class="btn btn-sm"
+                      type="button"
+                      (click)="tirarDaLista(pessoa)"
+                      [disabled]="emAndamento() === pessoa.id"
+                    >
+                      Tirar da lista
+                    </button>
+                  }
+
+                  @if (isAdmin()) {
+                    <button
+                      class="btn btn-sm"
+                      type="button"
+                      (click)="remover(pessoa)"
+                      [disabled]="emAndamento() === pessoa.id"
+                    >
+                      Remover
+                    </button>
+                  }
                 }
               </td>
             </tr>

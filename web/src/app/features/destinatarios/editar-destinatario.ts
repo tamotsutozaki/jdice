@@ -1,50 +1,69 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import {
-  LIMITES_DESTINATARIO,
-  ListaDeDestinatarios,
-  RecipientsService,
-} from '../../core/recipients/recipients.service';
+import { LIMITES_DESTINATARIO, RecipientsService } from '../../core/recipients/recipients.service';
 
 interface CampoLivre {
   nome: string;
   valor: string;
 }
 
+/**
+ * Corrige nome e campos de um destinatário já cadastrado. O e-mail é a
+ * identidade da pessoa e não muda por aqui — mudar de e-mail é outra pessoa.
+ */
 @Component({
-  selector: 'app-novo-destinatario',
+  selector: 'app-editar-destinatario',
   imports: [ReactiveFormsModule, RouterLink],
-  templateUrl: './novo-destinatario.html',
+  templateUrl: './editar-destinatario.html',
   styleUrl: './novo-destinatario.scss',
 })
-export class NovoDestinatario {
+export class EditarDestinatario {
   private readonly recipients = inject(RecipientsService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly formBuilder = inject(FormBuilder);
 
   protected readonly limites = LIMITES_DESTINATARIO;
 
-  protected readonly listas = signal<ListaDeDestinatarios[]>([]);
+  private readonly id = this.route.snapshot.paramMap.get('id') ?? '';
+
+  protected readonly email = signal('');
   protected readonly campos = signal<CampoLivre[]>([]);
+  protected readonly carregando = signal(true);
   protected readonly enviando = signal(false);
   protected readonly erro = signal('');
+  protected readonly naoEncontrado = signal(false);
 
   protected readonly form = this.formBuilder.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
     nome: ['', [Validators.maxLength(LIMITES_DESTINATARIO.maxNome)]],
-    listaId: [''],
   });
 
   constructor() {
-    this.recipients.listas().subscribe((listas) => this.listas.set(listas));
+    this.recipients.obter(this.id).subscribe({
+      next: (destinatario) => {
+        this.email.set(destinatario.email);
+        this.form.setValue({ nome: destinatario.nome });
+        this.campos.set(
+          Object.entries(destinatario.campos).map(([nome, valor]) => ({ nome, valor })),
+        );
+        this.carregando.set(false);
+      },
+      error: (erro: HttpErrorResponse) => {
+        this.carregando.set(false);
+        this.naoEncontrado.set(erro.status === 404);
+        this.erro.set(
+          erro.status === 404
+            ? 'Destinatário não encontrado.'
+            : 'Não foi possível carregar o destinatário.',
+        );
+      },
+    });
   }
 
   protected adicionarCampo(): void {
-    // O backend guarda no máximo 30 campos; deixar adicionar mais só perderia
-    // dado sem aviso.
     if (this.campos().length >= LIMITES_DESTINATARIO.maxCampos) {
       return;
     }
@@ -71,7 +90,7 @@ export class NovoDestinatario {
     this.enviando.set(true);
     this.erro.set('');
 
-    const { email, nome, listaId } = this.form.getRawValue();
+    const { nome } = this.form.getRawValue();
 
     const campos = Object.fromEntries(
       this.campos()
@@ -79,15 +98,11 @@ export class NovoDestinatario {
         .map((campo) => [campo.nome.trim(), campo.valor.trim()]),
     );
 
-    this.recipients.criar({ email, nome, campos, listaId: listaId || undefined }).subscribe({
+    this.recipients.atualizar(this.id, { nome, campos }).subscribe({
       next: () => this.router.navigate(['/destinatarios']),
-      error: (erro: HttpErrorResponse) => {
+      error: () => {
         this.enviando.set(false);
-        this.erro.set(
-          erro.status === 409
-            ? 'Já existe um destinatário com esse e-mail.'
-            : 'Não foi possível salvar. Revise os dados e tente de novo.',
-        );
+        this.erro.set('Não foi possível salvar. Revise os dados e tente de novo.');
       },
     });
   }

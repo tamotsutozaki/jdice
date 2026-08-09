@@ -2,6 +2,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+/** Espelham os limites do domínio (Recipient.cs), para a UI avisar antes do 400. */
+export const LIMITES_DESTINATARIO = {
+  maxCampos: 30,
+  maxNomeCampo: 60,
+  maxValorCampo: 500,
+  maxNome: 200,
+} as const;
+
 export interface Destinatario {
   id: string;
   email: string;
@@ -75,6 +83,10 @@ export class RecipientsService {
     return this.http.get<Pagina<Destinatario>>('/api/recipients', { params });
   }
 
+  obter(id: string): Observable<Destinatario> {
+    return this.http.get<Destinatario>(`/api/recipients/${id}`);
+  }
+
   criar(destinatario: {
     email: string;
     nome: string;
@@ -82,6 +94,24 @@ export class RecipientsService {
     listaId?: string;
   }): Observable<Destinatario> {
     return this.http.post<Destinatario>('/api/recipients', destinatario);
+  }
+
+  /** Corrige nome e campos de quem já existe; o e-mail é a identidade e não muda. */
+  atualizar(
+    id: string,
+    dados: { nome: string; campos: Record<string, string> },
+  ): Observable<Destinatario> {
+    return this.http.put<Destinatario>(`/api/recipients/${id}`, dados);
+  }
+
+  /** Em quais listas o destinatário já está — usado para não reoferecer as mesmas. */
+  listasDe(destinatarioId: string): Observable<ListaDeDestinatarios[]> {
+    return this.http.get<ListaDeDestinatarios[]>(`/api/recipients/${destinatarioId}/lists`);
+  }
+
+  /** Coloca um destinatário existente numa lista. É idempotente no backend. */
+  adicionarNaLista(listaId: string, destinatarioId: string): Observable<void> {
+    return this.http.post<void>(`/api/recipient-lists/${listaId}/members/${destinatarioId}`, {});
   }
 
   /** Vale para todas as listas: o descadastro é da pessoa, não do agrupamento. */
@@ -112,6 +142,13 @@ export class RecipientsService {
 
   criarLista(lista: { nome: string; descricao: string }): Observable<ListaDeDestinatarios> {
     return this.http.post<ListaDeDestinatarios>('/api/recipient-lists', lista);
+  }
+
+  atualizarLista(
+    id: string,
+    lista: { nome: string; descricao: string },
+  ): Observable<ListaDeDestinatarios> {
+    return this.http.put<ListaDeDestinatarios>(`/api/recipient-lists/${id}`, lista);
   }
 
   removerLista(id: string): Observable<void> {

@@ -16,6 +16,12 @@ public sealed class RecipientListService(
         await lists.FindByIdAsync(id, cancellationToken)
         ?? throw new RecipientListNotFoundException(id);
 
+    /// <summary>Total de membros e quantos ainda recebem, para uma lista só.</summary>
+    public Task<(int TotalDeMembros, int TotalAtivos)> CountMembersAsync(
+        Guid id,
+        CancellationToken cancellationToken = default) =>
+        lists.CountMembersAsync(id, cancellationToken);
+
     public async Task<RecipientList> CreateAsync(
         string nome,
         string? descricao,

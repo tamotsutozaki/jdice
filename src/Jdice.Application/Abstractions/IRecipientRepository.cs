@@ -60,6 +60,14 @@ public interface IRecipientListRepository
 
     Task<RecipientList?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Total de membros e quantos ainda estão inscritos. Existe para uma lista
+    /// individual não repetir o total como se fossem todos ativos.
+    /// </summary>
+    Task<(int TotalDeMembros, int TotalAtivos)> CountMembersAsync(
+        Guid listaId,
+        CancellationToken cancellationToken = default);
+
     Task<bool> NameExistsAsync(
         string name,
         Guid? exceptId = null,
