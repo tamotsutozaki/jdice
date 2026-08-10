@@ -30,6 +30,12 @@ export interface Disparo {
   resumo: ResumoDeEntregas;
 }
 
+export interface TentativaDeEntrega {
+  numero: number;
+  quando: string;
+  erro: string;
+}
+
 export interface Entrega {
   id: string;
   email: string;
@@ -37,6 +43,7 @@ export interface Entrega {
   tentativas: number;
   erro: string;
   enviadoEm: string | null;
+  historico: TentativaDeEntrega[];
 }
 
 export interface NovoDisparo {

@@ -17,6 +17,9 @@
       </div>
       <div class="head-acoes">
         <button class="btn btn-sm" type="button" (click)="carregar()">Atualizar</button>
+        @if (d.resumo.total > 0) {
+          <a class="btn btn-sm" [href]="urlDoExport()" download>Exportar CSV</a>
+        }
         <a class="btn btn-sm" routerLink="/disparos">Voltar</a>
       </div>
     </div>
@@ -144,7 +147,18 @@
                       {{ rotuloDaEntrega(entrega.situacao) }}
                     </span>
                   </td>
-                  <td>{{ entrega.tentativas }}</td>
+                  <td>
+                    {{ entrega.tentativas }}
+                    @if (entrega.historico.length > 0) {
+                      <button
+                        class="ver-tentativas"
+                        type="button"
+                        (click)="alternarHistorico(entrega.id)"
+                      >
+                        {{ historicoAberto().has(entrega.id) ? 'ocultar' : 'ver' }}
+                      </button>
+                    }
+                  </td>
                   <td class="detalhe">
                     @if (entrega.enviadoEm) {
                       {{ formatarDataHora(entrega.enviadoEm) }}
@@ -155,6 +169,23 @@
                     }
                   </td>
                 </tr>
+                @if (historicoAberto().has(entrega.id)) {
+                  <tr class="historico-linha">
+                    <td colspan="4">
+                      <ol class="historico">
+                        @for (tentativa of entrega.historico; track tentativa.numero) {
+                          <li>
+                            <span class="tentativa-num">Tentativa {{ tentativa.numero }}</span>
+                            <span class="tentativa-quando">
+                              {{ formatarDataHora(tentativa.quando) }}
+                            </span>
+                            <span class="tentativa-erro">{{ tentativa.erro }}</span>
+                          </li>
+                        }
+                      </ol>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>

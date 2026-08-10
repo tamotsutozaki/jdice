@@ -283,7 +283,7 @@ public sealed class CampaignProcessor(
         }
         else
         {
-            entrega.MarkFailed(resultado.Motivo);
+            entrega.MarkFailed(resultado.Motivo, clock.GetUtcNow());
         }
 
         await campaigns.SaveChangesAsync(cancellationToken);

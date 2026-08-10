@@ -45,6 +45,12 @@ public sealed class CampaignService(
         CancellationToken cancellationToken = default) =>
         campaigns.ListDeliveriesAsync(id, limite, cancellationToken);
 
+    /// <summary>Todas as entregas, em streaming, para a exportação em CSV.</summary>
+    public IAsyncEnumerable<Delivery> StreamDeliveriesAsync(
+        Guid id,
+        CancellationToken cancellationToken = default) =>
+        campaigns.StreamDeliveriesAsync(id, cancellationToken);
+
     /// <summary>
     /// Monta o disparo e agenda o processamento. Não envia nada: quem envia é
     /// o worker, e a requisição volta assim que o trabalho está registrado.

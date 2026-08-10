@@ -108,6 +108,16 @@ public sealed class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
         builder.Property(delivery => delivery.CreatedAt).IsRequired();
         builder.Property(delivery => delivery.SentAt);
 
+        // Histórico de tentativas em jsonb: uma coluna por tentativa seria
+        // desperdício, e a lista quase sempre tem zero ou um item.
+        builder.Property(delivery => delivery.AttemptLog)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                log => JsonSerializer.Serialize(log, JsonOptions),
+                json => DesserializarTentativas(json),
+                ComparadorTentativas)
+            .IsRequired();
+
         // A mesma pessoa não recebe duas vezes o mesmo disparo — garantia do
         // banco, não da lógica: com vários workers em paralelo, a checagem em
         // memória não basta.
@@ -117,4 +127,19 @@ public sealed class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
         // O worker busca as pendentes de um disparo.
         builder.HasIndex(delivery => new { delivery.CampaignId, delivery.Status });
     }
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
+    private static IReadOnlyList<DeliveryAttempt> DesserializarTentativas(string json) =>
+        JsonSerializer.Deserialize<List<DeliveryAttempt>>(json, JsonOptions) ?? [];
+
+    private static readonly ValueComparer<IReadOnlyList<DeliveryAttempt>> ComparadorTentativas =
+        new(
+            (esquerda, direita) =>
+                esquerda != null && direita != null && esquerda.SequenceEqual(direita),
+            log => log.Aggregate(0, (acumulado, item) => HashCode.Combine(acumulado, item)),
+            log => log.ToList());
 }

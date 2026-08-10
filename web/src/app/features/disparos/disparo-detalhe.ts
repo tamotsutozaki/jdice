@@ -46,6 +46,11 @@ export class DisparoDetalhe {
 
   protected readonly filtroDeEntregas = signal('');
 
+  // Quais entregas estão com o histórico de tentativas aberto.
+  protected readonly historicoAberto = signal<Set<string>>(new Set());
+
+  protected readonly urlDoExport = computed(() => `/api/campaigns/${this.id()}/deliveries/export`);
+
   protected readonly fusoDoNavegador = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   protected readonly podeMexer = computed(() => this.disparo()?.situacao === 'Scheduled');
@@ -158,6 +163,18 @@ export class DisparoDetalhe {
             : 'Não foi possível remarcar.',
         );
       },
+    });
+  }
+
+  protected alternarHistorico(id: string): void {
+    this.historicoAberto.update((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(id)) {
+        proximo.delete(id);
+      } else {
+        proximo.add(id);
+      }
+      return proximo;
     });
   }
 

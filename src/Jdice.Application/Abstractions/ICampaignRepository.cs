@@ -54,6 +54,11 @@ public interface ICampaignRepository
         int limite,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Todas as entregas do disparo, em streaming, para exportar sem carregar tudo na memória.</summary>
+    IAsyncEnumerable<Delivery> StreamDeliveriesAsync(
+        Guid campaignId,
+        CancellationToken cancellationToken = default);
+
     Task<Delivery?> FindDeliveryAsync(Guid deliveryId, CancellationToken cancellationToken = default);
 
     Task AddAsync(Campaign campaign, CancellationToken cancellationToken = default);

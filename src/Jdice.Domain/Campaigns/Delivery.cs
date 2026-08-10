@@ -1,5 +1,12 @@
 namespace Jdice.Domain.Campaigns;
 
+/// <summary>
+/// Uma tentativa de envio que falhou. Guardar cada uma responde "por que
+/// falhou?" com mais que o último erro: mostra que a 1ª foi timeout e a 3ª uma
+/// recusa, por exemplo.
+/// </summary>
+public sealed record DeliveryAttempt(int Numero, DateTimeOffset Quando, string Erro);
+
 public enum DeliveryStatus
 {
     /// <summary>Aguardando o worker pegar.</summary>
@@ -73,6 +80,9 @@ public sealed class Delivery
 
     public string Error { get; private set; }
 
+    /// <summary>Uma linha por tentativa que falhou, na ordem em que aconteceram.</summary>
+    public IReadOnlyList<DeliveryAttempt> AttemptLog { get; private set; } = [];
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset? SentAt { get; private set; }
@@ -116,9 +126,14 @@ public sealed class Delivery
     /// sobrando; passando do limite, desiste de vez para não insistir
     /// eternamente num endereço que não existe.
     /// </summary>
-    public void MarkFailed(string motivo)
+    public void MarkFailed(string motivo, DateTimeOffset quando)
     {
         Error = Encurtar(motivo);
+
+        // Lista reconstruída em vez de mutada: o EF trata a coluna jsonb como um
+        // valor só, e trocar a referência é o que ele detecta como mudança.
+        AttemptLog = [.. AttemptLog, new DeliveryAttempt(Attempts, quando, Error)];
+
         Status = Attempts >= MaximumAttempts ? DeliveryStatus.Failed : DeliveryStatus.Pending;
     }
 

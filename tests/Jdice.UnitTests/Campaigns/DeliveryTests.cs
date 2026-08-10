@@ -62,7 +62,7 @@ public class DeliveryTests
         var delivery = Criar();
 
         delivery.TryStart();
-        delivery.MarkFailed("timeout no SMTP");
+        delivery.MarkFailed("timeout no SMTP", Agora);
         delivery.TryStart();
         delivery.MarkSent(Agora);
 
@@ -77,7 +77,7 @@ public class DeliveryTests
         var delivery = Criar();
 
         delivery.TryStart();
-        delivery.MarkFailed("conexão recusada");
+        delivery.MarkFailed("conexão recusada", Agora);
 
         // Volta para a fila: uma indisponibilidade momentânea do SMTP não
         // deve custar a entrega.
@@ -93,7 +93,7 @@ public class DeliveryTests
         for (var i = 0; i < Delivery.MaximumAttempts; i++)
         {
             Assert.True(delivery.TryStart());
-            delivery.MarkFailed("endereço inexistente");
+            delivery.MarkFailed("endereço inexistente", Agora);
         }
 
         // Insistir eternamente num endereço que não existe só queima recurso
@@ -101,6 +101,25 @@ public class DeliveryTests
         Assert.Equal(DeliveryStatus.Failed, delivery.Status);
         Assert.Equal(Delivery.MaximumAttempts, delivery.Attempts);
         Assert.False(delivery.TryStart());
+    }
+
+    [Fact]
+    public void Cada_falha_entra_no_historico_de_tentativas()
+    {
+        var delivery = Criar();
+
+        delivery.TryStart();
+        delivery.MarkFailed("timeout", Agora);
+        delivery.TryStart();
+        delivery.MarkFailed("recusa 550", Agora.AddMinutes(1));
+
+        // O histórico mostra a sequência: 1ª foi timeout, 2ª foi recusa — mais
+        // do que só o último erro.
+        Assert.Equal(2, delivery.AttemptLog.Count);
+        Assert.Equal(1, delivery.AttemptLog[0].Numero);
+        Assert.Equal("timeout", delivery.AttemptLog[0].Erro);
+        Assert.Equal(2, delivery.AttemptLog[1].Numero);
+        Assert.Equal(Agora.AddMinutes(1), delivery.AttemptLog[1].Quando);
     }
 
     [Fact]
@@ -120,7 +139,7 @@ public class DeliveryTests
         var delivery = Criar();
         delivery.TryStart();
 
-        delivery.MarkFailed(new string('x', 900));
+        delivery.MarkFailed(new string('x', 900), Agora);
 
         // Relatório de SMTP pode vir enorme; a coluna guarda o essencial.
         Assert.Equal(500, delivery.Error.Length);

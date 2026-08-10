@@ -96,6 +96,15 @@ public sealed class CampaignRepository(JdiceDbContext context) : ICampaignReposi
             .Take(limite)
             .ToListAsync(cancellationToken);
 
+    public IAsyncEnumerable<Delivery> StreamDeliveriesAsync(
+        Guid campaignId,
+        CancellationToken cancellationToken = default) =>
+        context.Deliveries
+            .AsNoTracking()
+            .Where(delivery => delivery.CampaignId == campaignId)
+            .OrderBy(delivery => delivery.Email)
+            .AsAsyncEnumerable();
+
     public Task<Delivery?> FindDeliveryAsync(
         Guid deliveryId,
         CancellationToken cancellationToken = default) =>

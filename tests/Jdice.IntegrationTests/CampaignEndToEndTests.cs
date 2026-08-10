@@ -416,6 +416,27 @@ public class CampaignEndToEndTests(CampanhaCompletaFixture factory) : IAsyncLife
         Assert.NotNull(entrega.EnviadoEm);
     }
 
+    [Fact]
+    public async Task Exporta_entregas_em_csv()
+    {
+        var client = await LogarAsync();
+        var campanhaId = await MontarDisparoSimplesAsync(client);
+
+        await factory.ProcessarAsync(campanhaId);
+
+        var resposta = await client.GetAsync($"/api/campaigns/{campanhaId}/deliveries/export");
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+        Assert.Equal("text/csv", resposta.Content.Headers.ContentType?.MediaType);
+
+        var csv = await resposta.Content.ReadAsStringAsync();
+
+        // Cabeçalho, o endereço e a situação: dá para conferir o disparo fora do sistema.
+        Assert.Contains("email;situacao;tentativas", csv, StringComparison.Ordinal);
+        Assert.Contains("ana@empresa.com", csv, StringComparison.Ordinal);
+        Assert.Contains("Sent", csv, StringComparison.Ordinal);
+    }
+
     private async Task<Guid> MontarDisparoSimplesAsync(
         HttpClient client,
         bool agendarParaOFuturo = false)

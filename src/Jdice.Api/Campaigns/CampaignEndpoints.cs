@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Text;
 using Jdice.Api.Auth;
 using Jdice.Api.Recipients;
 using Jdice.Application.Abstractions;
@@ -56,7 +57,10 @@ public sealed record DeliveryResponse(
     string Situacao,
     int Tentativas,
     string Erro,
-    DateTimeOffset? EnviadoEm);
+    DateTimeOffset? EnviadoEm,
+    IReadOnlyList<TentativaResponse> Historico);
+
+public sealed record TentativaResponse(int Numero, DateTimeOffset Quando, string Erro);
 
 public static class CampaignEndpoints
 {
@@ -69,6 +73,7 @@ public static class CampaignEndpoints
         grupo.MapGet("/", ListAsync);
         grupo.MapGet("/{id:guid}", GetAsync);
         grupo.MapGet("/{id:guid}/deliveries", DeliveriesAsync);
+        grupo.MapGet("/{id:guid}/deliveries/export", ExportDeliveriesAsync);
         grupo.MapPost("/", CreateAsync);
         grupo.MapPost("/{id:guid}/cancel", CancelAsync);
         grupo.MapPost("/{id:guid}/reschedule", RescheduleAsync);
@@ -132,16 +137,59 @@ public static class CampaignEndpoints
     {
         var entregas = await campaigns.DeliveriesAsync(id, limite, cancellationToken);
 
-        IReadOnlyList<DeliveryResponse> resposta = [.. entregas.Select(entrega => new DeliveryResponse(
-            entrega.Id,
-            entrega.Email,
-            entrega.Status.ToString(),
-            entrega.Attempts,
-            entrega.Error,
-            entrega.SentAt))];
+        IReadOnlyList<DeliveryResponse> resposta = [.. entregas.Select(ParaEntrega)];
 
         return TypedResults.Ok(resposta);
     }
+
+    /// <summary>
+    /// Exporta todas as entregas em CSV. Sem teto de 200 como a listagem: um
+    /// export pela metade não serve para conferência. Vai em streaming para não
+    /// carregar o disparo inteiro na memória.
+    /// </summary>
+    private static async Task<IResult> ExportDeliveriesAsync(
+        Guid id,
+        CampaignService campaigns,
+        CancellationToken cancellationToken)
+    {
+        var conteudo = new StringBuilder();
+        conteudo.Append("email;situacao;tentativas;erro;enviado_em\n");
+
+        await foreach (var entrega in campaigns.StreamDeliveriesAsync(id, cancellationToken))
+        {
+            conteudo
+                .Append(Csv(entrega.Email)).Append(';')
+                .Append(entrega.Status).Append(';')
+                .Append(entrega.Attempts).Append(';')
+                .Append(Csv(entrega.Error)).Append(';')
+                .Append(entrega.SentAt?.ToString("o") ?? string.Empty).Append('\n');
+        }
+
+        // BOM na frente para o Excel abrir os acentos em UTF-8 sem embaralhar.
+        var bytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetBytes(conteudo.ToString());
+
+        return Results.File(bytes, "text/csv; charset=utf-8", $"disparo-{id}.csv");
+    }
+
+    /// <summary>Escapa um campo de CSV: aspas quando houver separador, aspas ou quebra de linha.</summary>
+    private static string Csv(string valor)
+    {
+        if (valor.IndexOfAny([';', '"', '\n', '\r']) < 0)
+        {
+            return valor;
+        }
+
+        return $"\"{valor.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+    }
+
+    private static DeliveryResponse ParaEntrega(Delivery entrega) => new(
+        entrega.Id,
+        entrega.Email,
+        entrega.Status.ToString(),
+        entrega.Attempts,
+        entrega.Error,
+        entrega.SentAt,
+        [.. entrega.AttemptLog.Select(t => new TentativaResponse(t.Numero, t.Quando, t.Erro))]);
 
     private static async Task<Results<
         Accepted<CampaignResponse>,
