@@ -49,11 +49,11 @@
 
       @if (usuario(); as u) {
         <div class="topbar-user">
-          <div class="user-info">
+          <a class="user-info" routerLink="/perfil" title="Meu perfil">
             <div class="user-name">{{ u.email }}</div>
             <div class="user-role">{{ perfil() }}</div>
-          </div>
-          <div class="user-avatar">{{ iniciais() }}</div>
+          </a>
+          <a class="user-avatar" routerLink="/perfil" title="Meu perfil">{{ iniciais() }}</a>
           <button class="logout-btn" type="button" (click)="sair()" [disabled]="saindo()">
             Sair
           </button>

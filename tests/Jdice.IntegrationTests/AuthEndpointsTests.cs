@@ -106,6 +106,51 @@ public class AuthEndpointsTests(JdiceApiFactory factory) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Trocar_senha_com_a_atual_correta_passa_a_valer_no_login()
+    {
+        var client = await LogarComoAsync("pedro@empresa.com", UserRole.User);
+
+        var troca = await client.PostAsJsonAsync(
+            "/api/auth/me/password",
+            new { senhaAtual = SenhaValida, novaSenha = "outra-senha-bem-longa-456" });
+
+        Assert.Equal(HttpStatusCode.NoContent, troca.StatusCode);
+
+        // A senha antiga deixa de funcionar e a nova passa a valer.
+        var comAntiga = await CriarCliente()
+            .PostAsJsonAsync("/api/auth/login", new { email = "pedro@empresa.com", senha = SenhaValida });
+        Assert.Equal(HttpStatusCode.Unauthorized, comAntiga.StatusCode);
+
+        var comNova = await CriarCliente().PostAsJsonAsync(
+            "/api/auth/login",
+            new { email = "pedro@empresa.com", senha = "outra-senha-bem-longa-456" });
+        Assert.Equal(HttpStatusCode.NoContent, comNova.StatusCode);
+    }
+
+    [Fact]
+    public async Task Trocar_senha_com_a_atual_errada_devolve_400()
+    {
+        var client = await LogarComoAsync("pedro@empresa.com", UserRole.User);
+
+        var troca = await client.PostAsJsonAsync(
+            "/api/auth/me/password",
+            new { senhaAtual = "chute-errado-comprido", novaSenha = "outra-senha-bem-longa-456" });
+
+        // Sem provar a senha atual, uma sessão sequestrada tomaria a conta.
+        Assert.Equal(HttpStatusCode.BadRequest, troca.StatusCode);
+    }
+
+    [Fact]
+    public async Task Trocar_senha_sem_estar_logado_devolve_401()
+    {
+        var troca = await CriarCliente().PostAsJsonAsync(
+            "/api/auth/me/password",
+            new { senhaAtual = SenhaValida, novaSenha = "outra-senha-bem-longa-456" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, troca.StatusCode);
+    }
+
+    [Fact]
     public async Task Logout_encerra_a_sessao()
     {
         var client = await LogarComoAsync("pedro@empresa.com", UserRole.User);

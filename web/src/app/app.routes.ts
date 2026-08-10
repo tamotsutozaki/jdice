@@ -72,6 +72,10 @@ export const routes: Routes = [
           import('./features/destinatarios/editar-destinatario').then((m) => m.EditarDestinatario),
       },
       {
+        path: 'perfil',
+        loadComponent: () => import('./features/perfil/perfil').then((m) => m.Perfil),
+      },
+      {
         path: 'usuarios',
         canActivate: [adminGuard],
         loadComponent: () => import('./features/usuarios/usuarios').then((m) => m.Usuarios),

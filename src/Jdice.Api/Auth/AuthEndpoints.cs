@@ -18,6 +18,7 @@ public static class AuthEndpoints
             .RequireRateLimiting(LoginRateLimiting.PolicyName);
         group.MapPost("/logout", Logout).AllowAnonymous();
         group.MapGet("/me", GetCurrentUserAsync).RequireAuthorization();
+        group.MapPost("/me/password", ChangePasswordAsync).RequireAuthorization();
 
         // Criar conta é operação de administração. No projeto original este
         // endpoint era público e aceitava a role no corpo — qualquer pessoa
@@ -86,6 +87,45 @@ public static class AuthEndpoints
         }
 
         return TypedResults.Ok(new CurrentUserResponse(user.Id, user.Email, user.Role.ToString()));
+    }
+
+    private static async Task<Results<NoContent, UnauthorizedHttpResult, BadRequest<ProblemDetails>>>
+        ChangePasswordAsync(
+            [FromBody] ChangePasswordRequest request,
+            ClaimsPrincipal principal,
+            UserService userService,
+            CancellationToken cancellationToken)
+    {
+        var subject = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+        if (!Guid.TryParse(subject, out var userId))
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        try
+        {
+            await userService.ChangePasswordAsync(
+                userId,
+                request.SenhaAtual,
+                request.NovaSenha,
+                cancellationToken);
+
+            return TypedResults.NoContent();
+        }
+        catch (Exception exception)
+            when (exception is InvalidCurrentPasswordException or ArgumentException)
+        {
+            // Senha atual errada e nova senha fraca são os dois erros de quem
+            // chamou; a mensagem diz qual foi, sem vazar nada sensível.
+            return TypedResults.BadRequest(Problema(
+                StatusCodes.Status400BadRequest, "Não foi possível trocar a senha", exception.Message));
+        }
+        catch (UserNotFoundException)
+        {
+            // Token válido, conta sumiu depois da emissão.
+            return TypedResults.Unauthorized();
+        }
     }
 
     private static async Task<Results<Created<CreatedUserResponse>, Conflict<ProblemDetails>>> CreateUserAsync(

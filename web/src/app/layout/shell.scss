@@ -132,6 +132,8 @@
 
 .user-info {
   text-align: right;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .user-name {
@@ -157,6 +159,8 @@
   color: #1a1a1a;
   background: var(--yellow);
   border-radius: 50%;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .logout-btn {

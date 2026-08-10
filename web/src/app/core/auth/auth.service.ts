@@ -36,6 +36,11 @@ export class AuthService {
     );
   }
 
+  /** Troca a própria senha. Exige a atual — o backend recusa se não conferir. */
+  trocarSenha(senhaAtual: string, novaSenha: string): Observable<void> {
+    return this.http.post<void>('/api/auth/me/password', { senhaAtual, novaSenha });
+  }
+
   logout(): Observable<void> {
     return this.http.post<void>('/api/auth/logout', {}).pipe(
       tap(() => {

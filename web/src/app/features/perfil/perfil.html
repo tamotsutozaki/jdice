@@ -1,0 +1,57 @@
+<div class="pagina">
+  <div class="page-head">
+    <h1>Meu perfil</h1>
+    <p>Seus dados de acesso e a troca de senha.</p>
+  </div>
+
+  @if (usuario(); as u) {
+    <section class="card dados">
+      <div class="linha">
+        <span class="rotulo">E-mail</span>
+        <span class="valor">{{ u.email }}</span>
+      </div>
+      <div class="linha">
+        <span class="rotulo">Perfil</span>
+        <span class="valor">{{ perfil() }}</span>
+      </div>
+    </section>
+  }
+
+  <section class="card">
+    <h2>Trocar senha</h2>
+
+    @if (erro()) {
+      <p class="alert alert-error" role="alert">{{ erro() }}</p>
+    }
+    @if (aviso()) {
+      <p class="alert alert-success" role="status">{{ aviso() }}</p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="trocar()">
+      <label class="field">
+        <span>Senha atual</span>
+        <input type="password" formControlName="senhaAtual" autocomplete="current-password" />
+      </label>
+
+      <label class="field">
+        <span>Nova senha</span>
+        <input type="password" formControlName="novaSenha" autocomplete="new-password" />
+        @if (form.controls.novaSenha.touched && form.controls.novaSenha.invalid) {
+          <small>A senha precisa de pelo menos {{ senhaMinima }} caracteres.</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>Confirmar nova senha</span>
+        <input type="password" formControlName="confirmar" autocomplete="new-password" />
+        @if (form.controls.confirmar.touched && form.errors?.['naoConferem']) {
+          <small>As senhas não conferem.</small>
+        }
+      </label>
+
+      <button class="btn btn-primary" type="submit" [disabled]="enviando()">
+        {{ enviando() ? 'Salvando...' : 'Salvar nova senha' }}
+      </button>
+    </form>
+  </section>
+</div>

@@ -47,6 +47,34 @@ public sealed class UserService(
     public Task<User?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         users.FindByIdAsync(id, cancellationToken);
 
+    /// <summary>
+    /// Troca a senha da própria conta. Exige a senha atual: sem isso, uma
+    /// sessão sequestrada trocaria a senha e ficaria dona da conta.
+    /// </summary>
+    /// <exception cref="UserNotFoundException">A conta não existe.</exception>
+    /// <exception cref="InvalidCurrentPasswordException">A senha atual não confere.</exception>
+    /// <exception cref="ArgumentException">A nova senha não atende à política.</exception>
+    public async Task ChangePasswordAsync(
+        Guid userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await users.FindByIdAsync(userId, cancellationToken)
+            ?? throw new UserNotFoundException(userId);
+
+        if (!passwordHasher.Verify(currentPassword, user.PasswordHash))
+        {
+            throw new InvalidCurrentPasswordException();
+        }
+
+        PasswordPolicy.EnsureValid(newPassword, nameof(newPassword));
+
+        user.ChangePassword(passwordHasher.Hash(newPassword));
+
+        await users.SaveChangesAsync(cancellationToken);
+    }
+
     public Task<IReadOnlyList<User>> ListAsync(CancellationToken cancellationToken = default) =>
         users.ListAsync(cancellationToken);
 

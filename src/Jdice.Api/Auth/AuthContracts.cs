@@ -14,6 +14,12 @@ public sealed record CreateUserRequest(
         MaxLength(PasswordPolicy.MaximumLength)] string Senha,
     [property: Required] UserRole Role);
 
+public sealed record ChangePasswordRequest(
+    [property: Required] string SenhaAtual,
+    [property: Required,
+        MinLength(PasswordPolicy.MinimumLength),
+        MaxLength(PasswordPolicy.MaximumLength)] string NovaSenha);
+
 /// <summary>
 /// O que o front sabe sobre quem está logado. Não inclui o token: ele viaja
 /// em cookie httpOnly e o JavaScript não deve conseguir lê-lo.
