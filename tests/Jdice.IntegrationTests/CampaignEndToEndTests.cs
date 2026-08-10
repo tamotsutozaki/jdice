@@ -112,10 +112,13 @@ public sealed class CampanhaCompletaFixture : WebApplicationFactory<Program>, IA
 
             using var detalhe = JsonDocument.Parse(corpo);
 
+            var de = detalhe.RootElement.GetProperty("From");
+
             mensagens.Add(new MensagemCapturada(
                 detalhe.RootElement.GetProperty("To")[0].GetProperty("Address").GetString() ?? "",
                 detalhe.RootElement.GetProperty("Subject").GetString() ?? "",
-                detalhe.RootElement.TryGetProperty("HTML", out var html) ? html.GetString() ?? "" : ""));
+                detalhe.RootElement.TryGetProperty("HTML", out var html) ? html.GetString() ?? "" : "",
+                de.TryGetProperty("Name", out var nome) ? nome.GetString() ?? "" : ""));
         }
 
         return mensagens;
@@ -124,7 +127,11 @@ public sealed class CampanhaCompletaFixture : WebApplicationFactory<Program>, IA
     public async Task LimparCaixaAsync() =>
         await MailpitApi.DeleteAsync("/api/v1/messages");
 
-    public sealed record MensagemCapturada(string Para, string Assunto, string Html);
+    public sealed record MensagemCapturada(
+        string Para,
+        string Assunto,
+        string Html,
+        string Remetente = "");
 }
 
 [CollectionDefinition(nameof(CampanhaCompletaCollection))]
@@ -230,6 +237,81 @@ public class CampaignEndToEndTests(CampanhaCompletaFixture factory) : IAsyncLife
 
         // O assunto também aceita variáveis.
         Assert.Equal("Bem-vindo, Ana Souza!", paraAna.Assunto);
+    }
+
+    [Fact]
+    public async Task Remetente_do_disparo_vira_o_nome_no_de()
+    {
+        var client = await LogarAsync();
+
+        var modelo = await client.PostAsJsonAsync("/api/templates", new
+        {
+            nome = "Aviso",
+            categoria = "",
+            tags = Array.Empty<string>(),
+            html = "<p>Olá {{ nome }}.</p>"
+        });
+        var template = await modelo.Content.ReadFromJsonAsync<TemplateResponse>();
+
+        var lista = await client.PostAsJsonAsync("/api/recipient-lists", new { nome = "Time" });
+        var listaId = (await lista.Content.ReadFromJsonAsync<ListaResponse>())!.Id;
+
+        await client.PostAsync(
+            $"/api/recipients/import?listaId={listaId}",
+            Csv("email;nome\nana@empresa.com;Ana"));
+
+        var criado = await client.PostAsJsonAsync("/api/campaigns", new
+        {
+            templateId = template!.Id,
+            assunto = "Oi",
+            remetente = "Equipe RH",
+            listaIds = new[] { listaId }
+        });
+
+        var campanha = await criado.Content.ReadFromJsonAsync<CampanhaResponse>();
+        await factory.ProcessarAsync(campanha!.Id);
+
+        // O nome de exibição do "De:" é o do disparo, não o global "JDice".
+        var mensagem = Assert.Single(await factory.MensagensAsync());
+        Assert.Equal("Equipe RH", mensagem.Remetente);
+    }
+
+    [Fact]
+    public async Task Valores_comuns_preenchem_variaveis_iguais_para_todos()
+    {
+        var client = await LogarAsync();
+
+        var modelo = await client.PostAsJsonAsync("/api/templates", new
+        {
+            nome = "Comunicado",
+            categoria = "",
+            tags = Array.Empty<string>(),
+            html = "<p>Olá {{ nome }}, da {{ empresa }}.</p>"
+        });
+        var template = await modelo.Content.ReadFromJsonAsync<TemplateResponse>();
+
+        var lista = await client.PostAsJsonAsync("/api/recipient-lists", new { nome = "Time" });
+        var listaId = (await lista.Content.ReadFromJsonAsync<ListaResponse>())!.Id;
+
+        await client.PostAsync(
+            $"/api/recipients/import?listaId={listaId}",
+            Csv("email;nome\nana@empresa.com;Ana\nbruno@empresa.com;Bruno"));
+
+        var criado = await client.PostAsJsonAsync("/api/campaigns", new
+        {
+            templateId = template!.Id,
+            assunto = "Comunicado",
+            valoresComuns = new Dictionary<string, string> { ["empresa"] = "Acme" },
+            listaIds = new[] { listaId }
+        });
+
+        var campanha = await criado.Content.ReadFromJsonAsync<CampanhaResponse>();
+        await factory.ProcessarAsync(campanha!.Id);
+
+        // A mesma variável vale para todos, sem precisar estar no CSV de cada um.
+        var mensagens = await factory.MensagensAsync();
+        Assert.Equal(2, mensagens.Count);
+        Assert.All(mensagens, m => Assert.Contains("Acme", m.Html, StringComparison.Ordinal));
     }
 
     [Fact]

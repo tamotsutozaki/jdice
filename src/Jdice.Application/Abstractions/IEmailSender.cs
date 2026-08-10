@@ -1,10 +1,16 @@
 namespace Jdice.Application.Abstractions;
 
+/// <param name="RemetenteNome">
+/// Nome de exibição do remetente (o "De:"), definido pelo disparo. Vazio usa o
+/// nome global configurado. O e-mail do remetente não muda por aqui — ele
+/// precisa ser de um domínio verificado.
+/// </param>
 public sealed record EmailMessage(
     string ParaEmail,
     string ParaNome,
     string Assunto,
-    string CorpoHtml);
+    string CorpoHtml,
+    string RemetenteNome = "");
 
 /// <param name="Motivo">Vazio quando deu certo.</param>
 /// <param name="Permanente">

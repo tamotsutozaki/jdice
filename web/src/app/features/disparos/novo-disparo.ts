@@ -30,6 +30,8 @@ export class NovoDisparo {
   protected readonly templateId = signal('');
   protected readonly assunto = signal('');
   protected readonly nome = signal('');
+  protected readonly remetente = signal('');
+  protected readonly valoresComuns = signal<{ chave: string; valor: string }[]>([]);
   protected readonly listasEscolhidas = signal<string[]>([]);
   protected readonly quando = signal<'agora' | 'agendar'>('agora');
   protected readonly data = signal('');
@@ -76,6 +78,20 @@ export class NovoDisparo {
     );
   }
 
+  protected adicionarValor(): void {
+    this.valoresComuns.update((atual) => [...atual, { chave: '', valor: '' }]);
+  }
+
+  protected removerValor(indice: number): void {
+    this.valoresComuns.update((atual) => atual.filter((_, i) => i !== indice));
+  }
+
+  protected definirValor(indice: number, parte: 'chave' | 'valor', conteudo: string): void {
+    this.valoresComuns.update((atual) =>
+      atual.map((item, i) => (i === indice ? { ...item, [parte]: conteudo } : item)),
+    );
+  }
+
   protected confirmar(): void {
     if (!this.podeConfirmar() || this.enviando()) {
       return;
@@ -84,11 +100,19 @@ export class NovoDisparo {
     this.enviando.set(true);
     this.erro.set('');
 
+    const valores = Object.fromEntries(
+      this.valoresComuns()
+        .filter((item) => item.chave.trim() && item.valor.trim())
+        .map((item) => [item.chave.trim(), item.valor.trim()]),
+    );
+
     this.campaigns
       .criar({
         nome: this.nome() || undefined,
         templateId: this.templateId(),
         assunto: this.assunto(),
+        remetente: this.remetente().trim() || undefined,
+        valoresComuns: Object.keys(valores).length > 0 ? valores : undefined,
         listaIds: this.listasEscolhidas(),
         agendar: this.quando() === 'agendar' ? this.montarDataHora() : undefined,
         fusoHorario: this.fusoDoNavegador,

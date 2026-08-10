@@ -44,6 +44,7 @@ export interface NovoDisparo {
   templateId: string;
   templateVersionId?: string;
   assunto: string;
+  remetente?: string;
   valoresComuns?: Record<string, string>;
   listaIds: string[];
   destinatarioIds?: string[];

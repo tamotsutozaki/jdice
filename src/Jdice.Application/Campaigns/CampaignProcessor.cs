@@ -267,7 +267,8 @@ public sealed class CampaignProcessor(
                 destinatario.Email,
                 destinatario.Name,
                 assunto.Succeeded && assunto.Html is not null ? assunto.Html : campaign.Subject,
-                renderizado.Html),
+                renderizado.Html,
+                campaign.FromName),
             cancellationToken);
 
         if (resultado.Enviado)

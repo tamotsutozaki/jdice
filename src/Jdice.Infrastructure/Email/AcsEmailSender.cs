@@ -45,6 +45,9 @@ public sealed class AcsEmailSender : IEmailSender
             PlainText = ParaTextoSimples(mensagem.CorpoHtml)
         };
 
+        // O ACS não aceita nome de remetente por mensagem — o "De:" vem do nome
+        // configurado no domínio do recurso. Por isso mensagem.RemetenteNome (o
+        // remetente por disparo) não é aplicado aqui; ele só vale no SMTP.
         var email = new Acs.EmailMessage(
             senderAddress: _options.SenderAddress,
             content: conteudo,

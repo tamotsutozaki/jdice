@@ -82,6 +82,55 @@
           />
           <small class="hint">Só para você identificar depois. Em branco, usa o assunto.</small>
         </label>
+
+        <label class="field">
+          <span>Remetente (opcional)</span>
+          <input
+            type="text"
+            [ngModel]="remetente()"
+            (ngModelChange)="remetente.set($event)"
+            placeholder="Equipe JDice"
+          />
+          <small class="hint">
+            Nome que aparece no "De:". Em branco, usa o padrão configurado.
+          </small>
+        </label>
+
+        <div class="field">
+          <div class="valores-cabecalho">
+            <span>Valores comuns (opcional)</span>
+            <button class="btn btn-sm" type="button" (click)="adicionarValor()">
+              Adicionar valor
+            </button>
+          </div>
+
+          @if (valoresComuns().length === 0) {
+            <small class="hint">
+              Variáveis iguais para todo mundo do disparo — ex.: <code>empresa</code>. Os campos de
+              cada destinatário têm prioridade sobre estes.
+            </small>
+          } @else {
+            @for (item of valoresComuns(); track $index) {
+              <div class="valor-linha">
+                <input
+                  type="text"
+                  placeholder="nome da variável"
+                  [value]="item.chave"
+                  (input)="definirValor($index, 'chave', $any($event.target).value)"
+                />
+                <input
+                  type="text"
+                  placeholder="valor"
+                  [value]="item.valor"
+                  (input)="definirValor($index, 'valor', $any($event.target).value)"
+                />
+                <button class="btn btn-sm" type="button" (click)="removerValor($index)">
+                  Remover
+                </button>
+              </div>
+            }
+          }
+        </div>
       </section>
 
       <section class="card passo">

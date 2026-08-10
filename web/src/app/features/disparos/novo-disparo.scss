@@ -85,6 +85,31 @@
   }
 }
 
+.valores-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  span {
+    font-size: 13px;
+    font-weight: 500;
+  }
+}
+
+.valor-linha {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto;
+  gap: 8px;
+
+  input {
+    padding: 7px 10px;
+    font-size: 13px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+  }
+}
+
 .variaveis {
   display: flex;
   flex-direction: column;

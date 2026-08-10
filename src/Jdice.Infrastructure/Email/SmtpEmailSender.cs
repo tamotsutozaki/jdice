@@ -74,7 +74,14 @@ public sealed class SmtpEmailSender(
     {
         var mime = new MimeMessage();
 
-        mime.From.Add(new MailboxAddress(_options.FromName, _options.FromEmail));
+        // Nome de exibição do disparo quando houver; senão o global. O e-mail do
+        // remetente é sempre o configurado — trocá-lo por disparo exigiria um
+        // domínio verificado por disparo, o que não existe.
+        var nomeRemetente = string.IsNullOrWhiteSpace(mensagem.RemetenteNome)
+            ? _options.FromName
+            : mensagem.RemetenteNome;
+
+        mime.From.Add(new MailboxAddress(nomeRemetente, _options.FromEmail));
         mime.To.Add(new MailboxAddress(mensagem.ParaNome, mensagem.ParaEmail));
         mime.Subject = mensagem.Assunto;
 
