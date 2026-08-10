@@ -53,13 +53,13 @@ describe('Shell', () => {
 
   function rotulosDeNavegacao(fixture: ComponentFixture<Shell>): string[] {
     return Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.topbar-nav .nav-link'),
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.sidebar-nav .sidebar-item'),
     ).map((link) => link.textContent?.trim() ?? '');
   }
 
   afterEach(() => httpMock.verify());
 
-  it('mostra a marca no topo', () => {
+  it('mostra a marca na barra lateral', () => {
     const fixture = configurar('User');
 
     expect(texto(fixture)).toContain(MARCA.nome);

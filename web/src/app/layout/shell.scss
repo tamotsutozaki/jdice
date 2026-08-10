@@ -5,16 +5,24 @@
   overflow: hidden;
 }
 
-/* ── Barra lateral ── */
+/* ── Barra lateral (navegação principal) ── */
 .sidebar {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: var(--sidebar-w);
-  padding: 12px 0 16px;
+  gap: 3px;
+  width: 216px;
+  padding: 14px 12px 16px;
   background: var(--green-dark);
   flex-shrink: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px;
+  margin-bottom: 16px;
+  text-decoration: none;
 }
 
 .sidebar-logo {
@@ -23,35 +31,52 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  margin-bottom: 18px;
+  flex-shrink: 0;
   font-family: var(--font-title);
   font-size: 12px;
   font-weight: 800;
   color: #1a1a1a;
-  text-decoration: none;
   background: var(--yellow);
   border-radius: var(--radius-sm);
 }
 
-.sidebar-icon {
+.sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: rgba(255, 255, 255, 0.45);
+  gap: 11px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
   border-radius: 8px;
-  transition: all 0.18s;
+  transition: all 0.16s;
+
+  svg {
+    flex-shrink: 0;
+  }
 
   &:hover {
     color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
   }
 
   &.active {
     color: #fff;
     background: rgba(255, 255, 255, 0.14);
   }
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .sidebar-spacer {
@@ -75,12 +100,6 @@
   flex-shrink: 0;
 }
 
-.topbar-brand {
-  display: flex;
-  flex-direction: column;
-  margin-right: 40px;
-}
-
 .brand-name {
   font-family: var(--font-title);
   font-size: 13px;
@@ -95,32 +114,6 @@
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
-}
-
-.topbar-nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: 1;
-}
-
-.nav-link {
-  padding: 6px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.65);
-  text-decoration: none;
-  border-bottom: 2px solid transparent;
-  transition: color 0.16s;
-
-  &:hover {
-    color: #fff;
-  }
-
-  &.active {
-    color: #fff;
-    border-bottom-color: var(--yellow);
-  }
 }
 
 .topbar-user {
@@ -203,31 +196,14 @@
   flex-shrink: 0;
 }
 
-/* ── Tablet ── */
+/* ── Tablet: lateral mais estreita ── */
 @media (max-width: 64rem) {
   .sidebar {
-    width: 48px;
-    padding: 10px 0;
-  }
-
-  .sidebar-logo {
-    width: 28px;
-    height: 28px;
-    font-size: 11px;
-    margin-bottom: 14px;
+    width: 190px;
   }
 
   .topbar {
     padding: 0 16px;
-  }
-
-  .topbar-brand {
-    margin-right: 20px;
-  }
-
-  .nav-link {
-    padding: 6px 12px;
-    font-size: 12.5px;
   }
 
   .content {
@@ -235,7 +211,7 @@
   }
 }
 
-/* ── Celular: a lateral vira barra inferior, como no projeto original ── */
+/* ── Celular: a lateral vira barra inferior, só com ícones ── */
 @media (max-width: 48rem) {
   .app {
     flex-direction: column-reverse;
@@ -244,24 +220,33 @@
   .sidebar {
     flex-direction: row;
     justify-content: space-around;
+    align-items: center;
     width: 100%;
     height: 60px;
     padding: 6px 10px;
+    gap: 0;
   }
 
-  .sidebar-logo,
+  .sidebar-brand,
   .sidebar-spacer {
     display: none;
   }
 
-  .sidebar-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
+  .sidebar-nav {
+    flex-direction: row;
+    gap: 4px;
+    width: 100%;
+    justify-content: space-around;
   }
 
-  .topbar-nav {
-    display: none;
+  .sidebar-item {
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 10px;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
   }
 
   .user-info {

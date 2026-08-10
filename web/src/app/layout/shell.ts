@@ -16,9 +16,9 @@ interface ItemDeNavegacao {
 }
 
 /**
- * Moldura das telas autenticadas: barra lateral de ícones, topo com marca e
- * navegação, e rodapé. Reproduz a estrutura do projeto original — no celular a
- * lateral vira uma barra inferior, como lá.
+ * Moldura das telas autenticadas: a barra lateral é a navegação única (marca +
+ * itens com rótulo); o topo fica só com o usuário; e há um rodapé. No celular a
+ * lateral vira uma barra inferior, só com ícones.
  */
 @Component({
   selector: 'app-shell',
