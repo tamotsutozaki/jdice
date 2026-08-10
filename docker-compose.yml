@@ -141,6 +141,12 @@ services:
   web:
     build:
       context: ./web
+    environment:
+      # O nginx faz proxy de /api e /health para cá. Na Azure vira o FQDN
+      # interno do Container App da API. NGINX_ENVSUBST_FILTER garante que só
+      # esta variável seja substituída, preservando as $variáveis do nginx.
+      API_UPSTREAM: http://api:8080
+      NGINX_ENVSUBST_FILTER: API_UPSTREAM
     ports:
       - "${WEB_PORT:-8080}:80"
     depends_on:
