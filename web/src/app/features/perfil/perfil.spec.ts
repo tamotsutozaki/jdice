@@ -63,7 +63,9 @@ describe('Perfil', () => {
     const fixture = montar();
 
     preencher(fixture, 'senha-atual-comprida', 'nova-senha-bem-longa', 'nova-senha-bem-longa');
-    (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit'));
+    (fixture.nativeElement as HTMLElement)
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit'));
     fixture.detectChanges();
 
     expect(trocarSenha).toHaveBeenCalledWith('senha-atual-comprida', 'nova-senha-bem-longa');
@@ -75,7 +77,9 @@ describe('Perfil', () => {
     const fixture = montar();
 
     preencher(fixture, 'senha-atual-comprida', 'nova-senha-bem-longa', 'diferente-comprida');
-    (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit'));
+    (fixture.nativeElement as HTMLElement)
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit'));
     fixture.detectChanges();
 
     expect(trocarSenha).not.toHaveBeenCalled();
@@ -86,13 +90,19 @@ describe('Perfil', () => {
     configurar();
     trocarSenha.mockReturnValue(
       throwError(
-        () => new HttpErrorResponse({ status: 400, error: { detail: 'A senha atual está incorreta.' } }),
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            error: { detail: 'A senha atual está incorreta.' },
+          }),
       ),
     );
     const fixture = montar();
 
     preencher(fixture, 'errada-mas-comprida', 'nova-senha-bem-longa', 'nova-senha-bem-longa');
-    (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit'));
+    (fixture.nativeElement as HTMLElement)
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit'));
     fixture.detectChanges();
 
     expect(texto(fixture)).toContain('A senha atual está incorreta.');
