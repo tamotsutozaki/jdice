@@ -191,20 +191,23 @@
 }
 
 .content {
+  display: flex;
   flex: 1;
   min-height: 0;
+  flex-direction: column;
   overflow-y: auto;
   padding: 24px 32px;
   -webkit-overflow-scrolling: touch;
 }
 
 .footer {
-  padding: 14px 32px;
+  // margin-top:auto cola o rodapé no fim quando a página é curta, mas ele rola
+  // junto com o conteúdo quando a página é longa — em vez de ficar fixo.
+  margin-top: auto;
+  padding-top: 16px;
   font-size: 11.5px;
   color: var(--muted);
-  background: var(--green-light);
   border-top: 1px solid var(--border);
-  flex-shrink: 0;
 }
 
 /* ── Tablet: lateral mais estreita ── */
