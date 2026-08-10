@@ -33,24 +33,24 @@
     </nav>
 
     <div class="sidebar-spacer"></div>
+
+    @if (usuario(); as u) {
+      <div class="sidebar-user">
+        <a class="user-info" routerLink="/perfil" title="Meu perfil">
+          <span class="user-avatar">{{ iniciais() }}</span>
+          <span class="user-texto">
+            <span class="user-name">{{ u.email }}</span>
+            <span class="user-role">{{ perfil() }}</span>
+          </span>
+        </a>
+        <button class="logout-btn" type="button" (click)="sair()" [disabled]="saindo()">
+          Sair
+        </button>
+      </div>
+    }
   </aside>
 
   <div class="main">
-    <header class="topbar">
-      @if (usuario(); as u) {
-        <div class="topbar-user">
-          <a class="user-info" routerLink="/perfil" title="Meu perfil">
-            <div class="user-name">{{ u.email }}</div>
-            <div class="user-role">{{ perfil() }}</div>
-          </a>
-          <a class="user-avatar" routerLink="/perfil" title="Meu perfil">{{ iniciais() }}</a>
-          <button class="logout-btn" type="button" (click)="sair()" [disabled]="saindo()">
-            Sair
-          </button>
-        </div>
-      }
-    </header>
-
     <main class="content">
       <router-outlet />
     </main>
