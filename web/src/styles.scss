@@ -172,6 +172,10 @@ textarea {
 .field input,
 .field select,
 .field textarea {
+  width: 100%;
+  // Sem min-width:0, um <select> assume a largura da opção mais longa e força
+  // o container a crescer — estourando a tela em layouts estreitos.
+  min-width: 0;
   padding: 9px 11px;
   font-size: 13.5px;
   color: var(--text);
