@@ -1,0 +1,10 @@
+# Estado do Terraform: contém segredos (senha do banco, chave JWT). Nunca vai
+# para o repositório.
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
