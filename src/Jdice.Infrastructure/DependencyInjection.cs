@@ -33,8 +33,9 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddSingleton<ITemplateRenderer, ScribanTemplateRenderer>();
         services.AddSingleton<ICsvRecipientReader, CsvRecipientReader>();
-        services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<ICampaignScheduler, HangfireCampaignScheduler>();
+
+        AddEmailSender(services, configuration);
 
         services.AddOptions<JwtOptions>()
             .Bind(configuration.GetSection(JwtOptions.SectionName))
@@ -42,11 +43,6 @@ public static class DependencyInjection
             // Falha na subida, não no primeiro login: um segredo ausente ou
             // fraco é erro de configuração, e erro de configuração tem que
             // aparecer no deploy.
-            .ValidateOnStart();
-
-        services.AddOptions<SmtpOptions>()
-            .Bind(configuration.GetSection(SmtpOptions.SectionName))
-            .ValidateDataAnnotations()
             .ValidateOnStart();
 
         services.Configure<RabbitMqOptions>(configuration.GetSection(RabbitMqOptions.SectionName));
@@ -67,6 +63,37 @@ public static class DependencyInjection
         }
 
         return services;
+    }
+
+    /// <summary>
+    /// Escolhe o remetente por configuração: Mailpit (SMTP de captura) em
+    /// desenvolvimento, Azure Communication Services em produção. Só a seção do
+    /// provedor escolhido é exigida — quem roda com Mailpit não precisa de conta
+    /// na Azure, e quem roda na Azure não precisa de SMTP.
+    /// </summary>
+    private static void AddEmailSender(IServiceCollection services, IConfiguration configuration)
+    {
+        var email = configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>()
+            ?? new EmailOptions();
+
+        if (email.UsaAzure)
+        {
+            services.AddScoped<IEmailSender, AcsEmailSender>();
+            services.AddOptions<AcsOptions>()
+                .Bind(configuration.GetSection(AcsOptions.SectionName))
+                .ValidateDataAnnotations()
+                // Provider=Azure sem connection string é erro de configuração, e
+                // erro de configuração tem que quebrar na subida, não no 1º envio.
+                .ValidateOnStart();
+        }
+        else
+        {
+            services.AddScoped<IEmailSender, SmtpEmailSender>();
+            services.AddOptions<SmtpOptions>()
+                .Bind(configuration.GetSection(SmtpOptions.SectionName))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+        }
     }
 
     /// <summary>

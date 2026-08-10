@@ -73,6 +73,12 @@ services:
       Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-}
       Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:-}
 
+      # Envio: Mailpit (captura, padrão) ou Azure. Só troque EMAIL_PROVIDER para
+      # "Azure" e preencha ACS_* no .env para mandar de verdade.
+      Email__Provider: ${EMAIL_PROVIDER:-Mailpit}
+      Acs__ConnectionString: ${ACS_CONNECTION_STRING:-}
+      Acs__SenderAddress: ${ACS_SENDER_ADDRESS:-}
+
       Smtp__Host: ${SMTP_HOST:-mailpit}
       Smtp__Port: ${SMTP_PORT:-1025}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-nao-responda@jdice.local}
@@ -104,6 +110,11 @@ services:
       DOTNET_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-jdice};Username=${POSTGRES_USER:-jdice};Password=${POSTGRES_PASSWORD:-jdice}"
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?defina JWT_SIGNING_KEY no .env (minimo 32 bytes)}
+      # É o worker que envia de fato; estas variáveis precisam chegar aqui.
+      Email__Provider: ${EMAIL_PROVIDER:-Mailpit}
+      Acs__ConnectionString: ${ACS_CONNECTION_STRING:-}
+      Acs__SenderAddress: ${ACS_SENDER_ADDRESS:-}
+
       Smtp__Host: ${SMTP_HOST:-mailpit}
       Smtp__Port: ${SMTP_PORT:-1025}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-nao-responda@jdice.local}
