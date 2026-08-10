@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -20,10 +21,12 @@ const SENHA_MAXIMA = 128;
 })
 export class Perfil {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
 
   protected readonly senhaMinima = SENHA_MINIMA;
   protected readonly usuario = this.auth.user;
+  protected readonly saindo = signal(false);
 
   protected readonly perfil = computed(() => (this.auth.isAdmin() ? 'Administrador' : 'Usuário'));
 
@@ -46,6 +49,15 @@ export class Perfil {
     },
     { validators: [conferem] },
   );
+
+  protected sair(): void {
+    this.saindo.set(true);
+
+    this.auth.logout().subscribe({
+      next: () => this.router.navigateByUrl('/login'),
+      error: () => this.router.navigateByUrl('/login'),
+    });
+  }
 
   protected trocar(): void {
     if (this.form.invalid || this.enviando()) {

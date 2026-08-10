@@ -14,6 +14,11 @@
         <span class="rotulo">Perfil</span>
         <span class="valor">{{ perfil() }}</span>
       </div>
+      <div class="acoes-conta">
+        <button class="btn" type="button" (click)="sair()" [disabled]="saindo()">
+          {{ saindo() ? 'Saindo...' : 'Sair da conta' }}
+        </button>
+      </div>
     </section>
   }
 
