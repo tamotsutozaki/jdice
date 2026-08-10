@@ -7,6 +7,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  flex-wrap: wrap;
   margin-bottom: 18px;
 
   h1 {
@@ -80,6 +81,10 @@ form.card {
   display: grid;
   grid-template-columns: 1fr 1.4fr auto;
   gap: 8px;
+
+  @media (max-width: 40rem) {
+    grid-template-columns: 1fr;
+  }
 
   input {
     padding: 7px 10px;

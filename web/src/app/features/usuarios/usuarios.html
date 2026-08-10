@@ -24,70 +24,74 @@
   } @else if (usuarios().length === 0) {
     <p class="vazio">Nenhuma conta cadastrada.</p>
   } @else {
-    <table>
-      <thead>
-        <tr>
-          <th>E-mail</th>
-          <th>Perfil</th>
-          <th>Situação</th>
-          <th>Criada em</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (usuario of usuarios(); track usuario.id) {
-          <tr [class.inativa]="!usuario.ativo">
-            <td>
-              {{ usuario.email }}
-              @if (ehVoce(usuario)) {
-                <span class="voce">você</span>
-              }
-            </td>
-            <td>
-              <span class="papel" [class.admin]="usuario.role === 'Admin'">{{ usuario.role }}</span>
-            </td>
-            <td>
-              @if (usuario.ativo) {
-                <span class="situacao ativa">Ativa</span>
-              } @else {
-                <span class="situacao">
-                  Desativada em {{ formatarData(usuario.desativadoEm) }}
-                </span>
-              }
-            </td>
-            <td class="data">{{ formatarData(usuario.criadoEm) }}</td>
-            <td class="acao">
-              @if (!usuario.ativo) {
-                <button
-                  type="button"
-                  (click)="reativar(usuario)"
-                  [disabled]="emAndamento() === usuario.id"
-                >
-                  {{ emAndamento() === usuario.id ? 'Reativando...' : 'Reativar' }}
-                </button>
-              } @else if (!ehVoce(usuario)) {
-                @if (confirmando() === usuario.id) {
-                  <span class="confirmar">
-                    <button type="button" class="perigo" (click)="desativar(usuario)">
-                      Confirmar
-                    </button>
-                    <button type="button" (click)="cancelar()">Cancelar</button>
-                  </span>
+    <div class="tabela-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>E-mail</th>
+            <th>Perfil</th>
+            <th>Situação</th>
+            <th>Criada em</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (usuario of usuarios(); track usuario.id) {
+            <tr [class.inativa]="!usuario.ativo">
+              <td>
+                {{ usuario.email }}
+                @if (ehVoce(usuario)) {
+                  <span class="voce">você</span>
+                }
+              </td>
+              <td>
+                <span class="papel" [class.admin]="usuario.role === 'Admin'">{{
+                  usuario.role
+                }}</span>
+              </td>
+              <td>
+                @if (usuario.ativo) {
+                  <span class="situacao ativa">Ativa</span>
                 } @else {
+                  <span class="situacao">
+                    Desativada em {{ formatarData(usuario.desativadoEm) }}
+                  </span>
+                }
+              </td>
+              <td class="data">{{ formatarData(usuario.criadoEm) }}</td>
+              <td class="acao">
+                @if (!usuario.ativo) {
                   <button
                     type="button"
-                    (click)="pedirConfirmacao(usuario.id)"
+                    (click)="reativar(usuario)"
                     [disabled]="emAndamento() === usuario.id"
                   >
-                    {{ emAndamento() === usuario.id ? 'Desativando...' : 'Desativar' }}
+                    {{ emAndamento() === usuario.id ? 'Reativando...' : 'Reativar' }}
                   </button>
+                } @else if (!ehVoce(usuario)) {
+                  @if (confirmando() === usuario.id) {
+                    <span class="confirmar">
+                      <button type="button" class="perigo" (click)="desativar(usuario)">
+                        Confirmar
+                      </button>
+                      <button type="button" (click)="cancelar()">Cancelar</button>
+                    </span>
+                  } @else {
+                    <button
+                      type="button"
+                      (click)="pedirConfirmacao(usuario.id)"
+                      [disabled]="emAndamento() === usuario.id"
+                    >
+                      {{ emAndamento() === usuario.id ? 'Desativando...' : 'Desativar' }}
+                    </button>
+                  }
                 }
-              }
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 
   <footer>
