@@ -4,8 +4,12 @@ locals {
   pg_connection = "Host=${azurerm_container_app.postgres.ingress[0].fqdn};Port=5432;Database=jdice;Username=jdice;Password=${var.postgres_password}"
 
   # FQDNs internos: os apps se acham dentro do mesmo Container Apps Environment.
-  rabbit_host  = azurerm_container_app.rabbitmq.ingress[0].fqdn
-  mailpit_host = azurerm_container_app.mailpit.ingress[0].fqdn
+  rabbit_host = azurerm_container_app.rabbitmq.ingress[0].fqdn
+
+  # O Mailpit expõe a UI na porta principal (externa) e o SMTP como porta
+  # adicional interna. Portas adicionais são alcançadas pelo NOME do app, não
+  # pelo FQDN do ingress — por isso aqui é só "mailpit", com a 1025 no Smtp:Port.
+  mailpit_host = "mailpit"
 
   image = {
     api    = "ghcr.io/${var.ghcr_owner}/jdice-api:${var.image_tag}"
@@ -63,34 +67,54 @@ resource "azurerm_container_app" "postgres" {
   }
 }
 
-# ── Mailpit: SMTP de captura, interno. Temporário até o ACS entrar no lugar. ──
-resource "azurerm_container_app" "mailpit" {
-  name                         = "mailpit"
-  container_app_environment_id = azurerm_container_app_environment.env.id
-  resource_group_name          = azurerm_resource_group.rg.name
-  revision_mode                = "Single"
+# ── Mailpit: SMTP de captura + interface web. Precisa de DUAS portas (UI 8025 e
+# SMTP 1025), o que o azurerm não suporta — por isso vai via AzAPI, que fala
+# direto com a API da Azure. A UI é a porta principal, externa (para ver os
+# e-mails capturados); o SMTP é porta adicional interna (a api/worker entregam
+# em mailpit:1025). Temporário até o ACS entrar no lugar. ──
+resource "azapi_resource" "mailpit" {
+  type      = "Microsoft.App/containerApps@2025-01-01"
+  name      = "mailpit"
+  location  = azurerm_resource_group.rg.location
+  parent_id = azurerm_resource_group.rg.id
 
-  template {
-    min_replicas = 1
-    max_replicas = 1
-    container {
-      name   = "mailpit"
-      image  = "axllent/mailpit:v1.21"
-      cpu    = 0.25
-      memory = "0.5Gi"
+  body = {
+    properties = {
+      managedEnvironmentId = azurerm_container_app_environment.env.id
+      configuration = {
+        activeRevisionsMode = "Single"
+        ingress = {
+          external   = true
+          targetPort = 8025
+          transport  = "auto"
+          traffic = [{
+            latestRevision = true
+            weight         = 100
+          }]
+          additionalPortMappings = [{
+            external   = false
+            targetPort = 1025
+          }]
+        }
+      }
+      template = {
+        containers = [{
+          name  = "mailpit"
+          image = "axllent/mailpit:v1.21"
+          resources = {
+            cpu    = 0.25
+            memory = "0.5Gi"
+          }
+        }]
+        scale = {
+          minReplicas = 1
+          maxReplicas = 1
+        }
+      }
     }
   }
 
-  ingress {
-    external_enabled = false
-    transport        = "tcp"
-    target_port      = 1025
-    exposed_port     = 1025
-    traffic_weight {
-      latest_revision = true
-      percentage      = 100
-    }
-  }
+  response_export_values = ["properties.configuration.ingress.fqdn"]
 }
 
 # ── RabbitMQ: fila de fan-out, interna por TCP. ──
