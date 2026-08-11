@@ -1,7 +1,7 @@
 locals {
-  # Postgres Flexible exige TLS; Npgsql precisa do SSL Mode e de confiar no
-  # certificado gerenciado da Azure.
-  pg_connection = "Host=${azurerm_postgresql_flexible_server.db.fqdn};Port=5432;Database=jdice;Username=jdice;Password=${var.postgres_password};SSL Mode=Require;Trust Server Certificate=true"
+  # Postgres roda como container interno; conexão simples, sem TLS (a rede do
+  # Container Apps Environment é privada).
+  pg_connection = "Host=${azurerm_container_app.postgres.ingress[0].fqdn};Port=5432;Database=jdice;Username=jdice;Password=${var.postgres_password}"
 
   # FQDNs internos: os apps se acham dentro do mesmo Container Apps Environment.
   rabbit_host  = azurerm_container_app.rabbitmq.ingress[0].fqdn
@@ -11,6 +11,55 @@ locals {
     api    = "ghcr.io/${var.ghcr_owner}/jdice-api:${var.image_tag}"
     worker = "ghcr.io/${var.ghcr_owner}/jdice-worker:${var.image_tag}"
     web    = "ghcr.io/${var.ghcr_owner}/jdice-web:${var.image_tag}"
+  }
+}
+
+# ── Postgres: banco em container, interno. Efêmero de propósito — o banco é
+# recriado com seed a cada `up`, então não há volume persistente. Substitui o
+# servidor gerenciado para o custo caber na cota grátis do Container Apps. ──
+resource "azurerm_container_app" "postgres" {
+  name                         = "postgres"
+  container_app_environment_id = azurerm_container_app_environment.env.id
+  resource_group_name          = azurerm_resource_group.rg.name
+  revision_mode                = "Single"
+
+  secret {
+    name  = "pg-pass"
+    value = var.postgres_password
+  }
+
+  template {
+    min_replicas = 1
+    max_replicas = 1
+    container {
+      name   = "postgres"
+      image  = "postgres:17-alpine"
+      cpu    = 0.5
+      memory = "1Gi"
+      env {
+        name  = "POSTGRES_DB"
+        value = "jdice"
+      }
+      env {
+        name  = "POSTGRES_USER"
+        value = "jdice"
+      }
+      env {
+        name        = "POSTGRES_PASSWORD"
+        secret_name = "pg-pass"
+      }
+    }
+  }
+
+  ingress {
+    external_enabled = false
+    transport        = "tcp"
+    target_port      = 5432
+    exposed_port     = 5432
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
   }
 }
 
