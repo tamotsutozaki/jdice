@@ -1,14 +1,11 @@
 locals {
-  # Postgres roda como container interno; conexão simples, sem TLS (a rede do
-  # Container Apps Environment é privada).
-  pg_connection = "Host=${azurerm_container_app.postgres.ingress[0].fqdn};Port=5432;Database=jdice;Username=jdice;Password=${var.postgres_password}"
+  # Comunicação TCP interna entre apps no mesmo Environment é pelo NOME do app
+  # (postgres:5432), não pelo FQDN .internal — o FQDN resolve para o proxy HTTP
+  # (Envoy), que não roteia portas TCP e dá timeout. Vale para postgres, rabbitmq
+  # e a porta SMTP adicional do mailpit. Conexão sem TLS (rede privada).
+  pg_connection = "Host=postgres;Port=5432;Database=jdice;Username=jdice;Password=${var.postgres_password}"
 
-  # FQDNs internos: os apps se acham dentro do mesmo Container Apps Environment.
-  rabbit_host = azurerm_container_app.rabbitmq.ingress[0].fqdn
-
-  # O Mailpit expõe a UI na porta principal (externa) e o SMTP como porta
-  # adicional interna. Portas adicionais são alcançadas pelo NOME do app, não
-  # pelo FQDN do ingress — por isso aqui é só "mailpit", com a 1025 no Smtp:Port.
+  rabbit_host  = "rabbitmq"
   mailpit_host = "mailpit"
 
   image = {
@@ -256,6 +253,10 @@ resource "azurerm_container_app" "api" {
     external_enabled = false
     transport        = "http"
     target_port      = 8080
+    # A rede do Environment é privada e o TLS externo é terminado no web; sem
+    # isso, o Envoy do ingress redireciona o HTTP interno do nginx para HTTPS
+    # (301) e o proxy quebra.
+    allow_insecure_connections = true
     traffic_weight {
       latest_revision = true
       percentage      = 100
@@ -365,7 +366,10 @@ resource "azurerm_container_app" "web" {
       memory = "0.5Gi"
 
       env {
-        name  = "API_UPSTREAM"
+        name = "API_UPSTREAM"
+        # FQDN interno da API: o nginx não sobrescreve o Host, então usa este
+        # FQDN como header Host — que é o que o Envoy do Container Apps exige
+        # para rotear. Localmente vira http://api:8080.
         value = "http://${azurerm_container_app.api.ingress[0].fqdn}"
       }
       env {
