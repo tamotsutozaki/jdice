@@ -28,6 +28,12 @@ appsettings.*.Local.json
 # Ferramentas locais
 .claude/
 
+# Docs internos de trabalho (ficam só locais, fora do GitHub)
+CLAUDE.md
+docs/contexto-sessao.md
+docs/plano-deploy-azure.md
+docs/envio-por-azure.md
+
 # IDE
 .idea/
 *.swp
